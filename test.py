@@ -1,18 +1,21 @@
 from pathlib import Path
 import sys
 
-PROJECT_ROOT = Path(__file__).resolve().parent
-SRC_PATH = PROJECT_ROOT / "src"
+ROOT = Path(__file__).resolve().parent
+SRC = ROOT / "src"
 
-sys.path.insert(0, str(SRC_PATH))
+if str(SRC) not in sys.path:
+    sys.path.insert(0, str(SRC))
 
-from sovereign.data.loaders import LocalLoader
+from sovereign.data.pipeline import DataPipeline
 
-loader = LocalLoader()
+pipeline = DataPipeline()
 
-resource = loader.load("README.md")
+parsed = pipeline.ingest("README.md")
 
-print(resource.filename)
-print(resource.mime_type)
-print(resource.extension)
-print(resource.size_bytes)
+print("=" * 60)
+print("Parser :", parsed.parser_name)
+print("Words  :", parsed.word_count)
+print("Title  :", parsed.title)
+print("=" * 60)
+print(parsed.text[:500])
