@@ -1,0 +1,41 @@
+sources:
+
+  - name: qiskit_documentation
+    category: official_docs
+    priority: 1
+    format: html
+    language: en
+    license: public_docs
+    status: pending
+
+  - name: pennylane_documentation
+    category: official_docs
+    priority: 1
+    format: html
+    language: en
+    license: public_docs
+    status: pending
+
+  - name: microsoft_quantum_docs
+    category: official_docs
+    priority: 1
+    format: html
+    language: en
+    license: public_docs
+    status: pending
+
+  - name: quantum_tutorials
+    category: tutorial
+    priority: 2
+    format: markdown
+    language: en
+    license: mixed
+    status: pending
+
+  - name: arxiv_quantum
+    category: research
+    priority: 3
+    format: pdf
+    language: en
+    license: varies
+    status: pending
