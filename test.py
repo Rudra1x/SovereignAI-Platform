@@ -1,29 +1,37 @@
-from sovereign.data.dataset import *
+from sovereign.data.pipeline import DataPipeline
 
-conversation = Conversation()
+from sovereign.data.extraction.engine import (
+    ExtractionEngine,
+)
 
-conversation.add(
-    Message(
-        role=Role.USER,
-        content="What is a qubit?"
+from sovereign.data.extraction.extractor import (
+    KnowledgeExtractor,
+)
+
+from sovereign.data.extraction.strategies.rule_based import (
+    RuleBasedExtractionStrategy,
+)
+
+pipeline = DataPipeline()
+
+parsed = pipeline.ingest("README.md")
+
+engine = ExtractionEngine(
+    KnowledgeExtractor(
+        RuleBasedExtractionStrategy()
     )
 )
 
-conversation.add(
-    Message(
-        role=Role.ASSISTANT,
-        content="A qubit is the basic unit of quantum information."
-    )
-)
+units = engine.run(parsed)
 
-record = CanonicalRecord(
-    conversation=conversation,
-    metadata=DatasetMetadata(
-        source_document="README.md",
-        language="en",
-        quality_score=0.95
-    ),
-    sample_type=SampleType.QA
-)
+print("=" * 60)
 
-print(record)
+print(f"Knowledge Units : {len(units)}")
+
+print("=" * 60)
+
+for unit in units:
+
+    print(unit.text[:120])
+
+    print("-" * 60)
