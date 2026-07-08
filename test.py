@@ -1,50 +1,29 @@
-from sovereign.data.pipeline import DataPipeline
+from sovereign.data.dataset import *
 
-from sovereign.data.transformers import (
-    Cleaner,
-    Normalizer,
-    TransformationPipeline,
+conversation = Conversation()
+
+conversation.add(
+    Message(
+        role=Role.USER,
+        content="What is a qubit?"
+    )
 )
 
-from sovereign.data.core.transformation_context import (
-    TransformationContext,
+conversation.add(
+    Message(
+        role=Role.ASSISTANT,
+        content="A qubit is the basic unit of quantum information."
+    )
 )
 
-from sovereign.data.processors.language.processor import (
-    LanguageProcessor,
+record = CanonicalRecord(
+    conversation=conversation,
+    metadata=DatasetMetadata(
+        source_document="README.md",
+        language="en",
+        quality_score=0.95
+    ),
+    sample_type=SampleType.QA
 )
 
-from sovereign.data.processors.language.rule_based import (
-    RuleBasedLanguageStrategy,
-)
-
-from sovereign.data.processors.quality.processor import (
-    QualityProcessor,
-)
-
-from sovereign.data.processors.quality.rule_based import (
-    RuleBasedQualityStrategy,
-)
-
-pipeline = DataPipeline()
-
-parsed = pipeline.ingest("README.md")
-
-context = TransformationContext(parsed)
-
-TransformationPipeline()\
-.add(Cleaner())\
-.add(Normalizer())\
-.run(context)
-
-LanguageProcessor(
-    RuleBasedLanguageStrategy()
-).process(context)
-
-QualityProcessor(
-    RuleBasedQualityStrategy()
-).process(context)
-
-print(context.language)
-print(context.quality_score)
-print(context.processing_history)
+print(record)
