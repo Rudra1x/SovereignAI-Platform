@@ -6,7 +6,6 @@ from sovereign.data.pipeline.factory import (
 
 from sovereign.data.core.parsed_content import ParsedContent
 
-
 class DataPipeline:
 
     """
