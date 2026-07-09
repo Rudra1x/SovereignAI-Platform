@@ -9,7 +9,7 @@ class DatasetExpander:
 
     def expand(
         self,
-        document_title: str,
+        chunk,
         structured: dict,
     ) -> list[dict]:
 
@@ -17,18 +17,21 @@ class DatasetExpander:
 
         samples.append(
             {
-                "instruction": f"Summarize {document_title}.",
+                "instruction": f"Summarize {chunk.title}.",
                 "input": "",
                 "output": structured["summary"],
                 "metadata": {
-                    "task": "summary"
+                    "task": "summary",
+                    "source": chunk.source,
+                    "title": chunk.title,
+                    "section": chunk.section,
                 },
             }
         )
 
         samples.append(
             {
-                "instruction": f"Explain {document_title}.",
+                "instruction": f"Explain {chunk.title}.",
                 "input": "",
                 "output": structured["explanation"],
                 "metadata": {

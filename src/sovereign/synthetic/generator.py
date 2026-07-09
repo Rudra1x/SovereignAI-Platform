@@ -43,6 +43,6 @@ class SyntheticGenerator:
             )
 
         return self.expander.expand(
-            title,
+            chunk,
             structured,
         )
