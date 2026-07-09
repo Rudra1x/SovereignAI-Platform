@@ -1,7 +1,7 @@
 from sovereign.data.core.types import DocumentFormat
 
 from sovereign.data.loaders import LocalLoader, HTTPLoader
-
+from pathlib import Path
 from sovereign.data.parsers import (
     HTMLParser,
     MarkdownParser,
@@ -15,6 +15,7 @@ class LoaderFactory:
 
     @staticmethod
     def create(source: str):
+        source = str(source)
 
         if source.startswith("http://") or source.startswith("https://"):
             return HTTPLoader()

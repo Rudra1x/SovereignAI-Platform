@@ -14,6 +14,7 @@ class Router:
         ".htm": DocumentFormat.HTML,
         ".md": DocumentFormat.MARKDOWN,
         ".markdown": DocumentFormat.MARKDOWN,
+        ".mdx": DocumentFormat.MARKDOWN,
         ".txt": DocumentFormat.TEXT,
         ".json": DocumentFormat.JSON,
     }
