@@ -20,6 +20,9 @@ class DatasetExpander:
                 "instruction": f"Summarize {document_title}.",
                 "input": "",
                 "output": structured["summary"],
+                "metadata": {
+                    "task": "summary"
+                },
             }
         )
 
@@ -28,6 +31,9 @@ class DatasetExpander:
                 "instruction": f"Explain {document_title}.",
                 "input": "",
                 "output": structured["explanation"],
+                "metadata": {
+                    "task": "explanation"
+                },
             }
         )
 
@@ -38,6 +44,9 @@ class DatasetExpander:
                     "instruction": qa["question"],
                     "input": "",
                     "output": qa["answer"],
+                    "metadata": {
+                        "task": "qa"
+                    },
                 }
             )
 
@@ -54,6 +63,9 @@ class DatasetExpander:
                     "instruction": text,
                     "input": "",
                     "output": mcq["answer"],
+                    "metadata": {
+                        "task": "mcq"
+                    },
                 }
             )
 
@@ -64,6 +76,9 @@ class DatasetExpander:
                     "instruction": task["question"],
                     "input": "",
                     "output": task["solution"],
+                    "metadata": {
+                        "task": "coding_task"
+                    },
                 }
             )
 
@@ -74,6 +89,9 @@ class DatasetExpander:
                     "instruction": "List a best practice.",
                     "input": "",
                     "output": practice,
+                    "metadata": {
+                        "task": "best_practice"
+                    },
                 }
             )
 
@@ -84,6 +102,9 @@ class DatasetExpander:
                     "instruction": "Describe a common mistake.",
                     "input": "",
                     "output": mistake,
+                    "metadata": {
+                        "task": "common_mistake"
+                    },
                 }
             )
 

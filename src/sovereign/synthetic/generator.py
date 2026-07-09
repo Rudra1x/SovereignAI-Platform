@@ -27,11 +27,10 @@ class SyntheticGenerator:
 
     def generate(
         self,
-        title: str,
-        text: str,
+        chunk,
     ) -> list[dict]:
 
-        prompt = self.prompt_builder.build(text)
+        prompt = self.prompt_builder.build(chunk)
 
         response = self.client.generate(prompt)
 

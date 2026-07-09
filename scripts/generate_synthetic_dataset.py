@@ -1,14 +1,14 @@
 """
 Generate Synthetic Dataset
 
-Reads the canonical corpus, generates synthetic instruction
-data using the local LLM, validates the output and writes
-instruction tuning samples.
+Reads the canonical corpus, chunks documents into semantic chunks,
+generates instruction tuning data using Ollama and writes the
+final JSONL dataset.
 
 Usage
 -----
 
-Generate entire dataset
+Generate full dataset
 
 python scripts/generate_synthetic_dataset.py
 
@@ -16,7 +16,7 @@ Generate first 10 documents
 
 python scripts/generate_synthetic_dataset.py --limit 10
 
-Resume previous generation
+Resume generation
 
 python scripts/generate_synthetic_dataset.py --resume
 """
@@ -32,13 +32,14 @@ from datetime import datetime
 
 from tqdm import tqdm
 
+from sovereign.synthetic.chunker import SemanticChunker
 from sovereign.synthetic.generator import SyntheticGenerator
 from sovereign.synthetic.writer import DatasetWriter
 
 
-# ---------------------------------------------------------------------
+# =====================================================================
 # Paths
-# ---------------------------------------------------------------------
+# =====================================================================
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -55,7 +56,12 @@ OUTPUT_DIR = (
     / "synthetic"
 )
 
-RAW_DATASET = (
+OUTPUT_DIR.mkdir(
+    parents=True,
+    exist_ok=True,
+)
+
+OUTPUT_DATASET = (
     OUTPUT_DIR
     / "instruction_dataset.jsonl"
 )
@@ -70,15 +76,10 @@ LOG_FILE = (
     / "generation.log"
 )
 
-OUTPUT_DIR.mkdir(
-    parents=True,
-    exist_ok=True,
-)
 
-
-# ---------------------------------------------------------------------
+# =====================================================================
 # Command Line
-# ---------------------------------------------------------------------
+# =====================================================================
 
 def parse_args():
 
@@ -88,7 +89,7 @@ def parse_args():
         "--limit",
         type=int,
         default=None,
-        help="Maximum documents to process",
+        help="Maximum number of documents to process",
     )
 
     parser.add_argument(
@@ -100,9 +101,9 @@ def parse_args():
     return parser.parse_args()
 
 
-# ---------------------------------------------------------------------
+# =====================================================================
 # Logging
-# ---------------------------------------------------------------------
+# =====================================================================
 
 def log(message: str):
 
@@ -124,9 +125,9 @@ def log(message: str):
         f.write("\n")
 
 
-# ---------------------------------------------------------------------
+# =====================================================================
 # Checkpoint
-# ---------------------------------------------------------------------
+# =====================================================================
 
 class CheckpointManager:
 
@@ -143,10 +144,17 @@ class CheckpointManager:
         if not self.exists():
 
             return {
+
                 "document_index": 0,
+
+                "generated_chunks": 0,
+
                 "generated_samples": 0,
+
                 "failed_documents": 0,
+
                 "elapsed_seconds": 0,
+
             }
 
         with open(
@@ -159,17 +167,26 @@ class CheckpointManager:
 
     def save(
         self,
-        index,
-        samples,
-        failures,
-        elapsed,
+        *,
+        document_index: int,
+        generated_chunks: int,
+        generated_samples: int,
+        failed_documents: int,
+        elapsed_seconds: float,
     ):
 
         checkpoint = {
-            "document_index": index,
-            "generated_samples": samples,
-            "failed_documents": failures,
-            "elapsed_seconds": elapsed,
+
+            "document_index": document_index,
+
+            "generated_chunks": generated_chunks,
+
+            "generated_samples": generated_samples,
+
+            "failed_documents": failed_documents,
+
+            "elapsed_seconds": elapsed_seconds,
+
         }
 
         with open(
@@ -185,9 +202,9 @@ class CheckpointManager:
             )
 
 
-# ---------------------------------------------------------------------
+# =====================================================================
 # Statistics
-# ---------------------------------------------------------------------
+# =====================================================================
 
 class Statistics:
 
@@ -196,6 +213,8 @@ class Statistics:
         self.start_time = time.time()
 
         self.documents = 0
+
+        self.chunks = 0
 
         self.samples = 0
 
@@ -208,38 +227,31 @@ class Statistics:
 
         return time.time() - self.start_time
 
-    def print_summary(self):
+    def summary(self):
 
         print()
 
         print("=" * 70)
-
         print("Generation Summary")
-
         print("=" * 70)
 
         print(f"Documents : {self.documents:,}")
-
+        print(f"Chunks    : {self.chunks:,}")
         print(f"Samples   : {self.samples:,}")
-
         print(f"Failures  : {self.failures:,}")
-
         print(f"Retries   : {self.retries:,}")
-
-        print(
-            f"Elapsed   : {self.elapsed:.2f} sec"
-        )
+        print(f"Elapsed   : {self.elapsed:.2f} sec")
 
         print("=" * 70)
 
 
-# ---------------------------------------------------------------------
-# Corpus Loader
-# ---------------------------------------------------------------------
+# =====================================================================
+# Corpus
+# =====================================================================
 
 def load_corpus():
 
-    records = []
+    corpus = []
 
     with open(
         CANONICAL_CORPUS,
@@ -249,17 +261,71 @@ def load_corpus():
 
         for line in f:
 
-            records.append(
+            corpus.append(
                 json.loads(line)
             )
 
-    return records
+    return corpus
 
-# ---------------------------------------------------------------------
-# Retry Generation
-# ---------------------------------------------------------------------
 
-def generate_with_retry(
+# =====================================================================
+# Initialization
+# =====================================================================
+
+def initialize(resume: bool):
+
+    checkpoint = CheckpointManager()
+
+    writer = DatasetWriter(
+        OUTPUT_DATASET,
+        mode="a" if resume else "w",
+    )
+
+    generator = SyntheticGenerator()
+
+    chunker = SemanticChunker(
+        chunk_size=450,
+        overlap=75,
+        min_chunk_size=120,
+    )
+
+    stats = Statistics()
+
+    return (
+        checkpoint,
+        writer,
+        generator,
+        chunker,
+        stats,
+    )
+
+# =====================================================================
+# Resume
+# =====================================================================
+
+def get_start_index(
+    resume: bool,
+    checkpoint: CheckpointManager,
+) -> int:
+
+    if not resume:
+
+        return 0
+
+    state = checkpoint.load()
+
+    log(
+        f"Resuming from document index {state['document_index']:,}"
+    )
+
+    return state["document_index"]
+
+
+# =====================================================================
+# Retry
+# =====================================================================
+
+def generate_chunk(
     generator: SyntheticGenerator,
     title: str,
     text: str,
@@ -272,12 +338,10 @@ def generate_with_retry(
 
         try:
 
-            samples = generator.generate(
+            return generator.generate(
                 title=title,
                 text=text,
             )
-
-            return samples
 
         except Exception as exc:
 
@@ -292,133 +356,294 @@ def generate_with_retry(
     raise last_exception
 
 
-# ---------------------------------------------------------------------
-# Progress Printer
-# ---------------------------------------------------------------------
+# =====================================================================
+# Progress
+# =====================================================================
 
 def print_progress(
     stats: Statistics,
-    current: int,
+    processed: int,
     total: int,
 ):
 
     elapsed = stats.elapsed
 
-    if current == 0:
+    if processed == 0:
 
         eta = 0
 
     else:
 
-        eta = (elapsed / current) * (total - current)
+        eta = (
+            elapsed / processed
+        ) * (
+            total - processed
+        )
 
     print()
 
     print("=" * 70)
 
     print(
-        f"Processed : {current:,}/{total:,}"
+        f"Processed Documents : {processed:,}/{total:,}"
     )
 
     print(
-        f"Generated : {stats.samples:,}"
+        f"Generated Chunks    : {stats.chunks:,}"
     )
 
     print(
-        f"Failures  : {stats.failures}"
+        f"Generated Samples   : {stats.samples:,}"
     )
 
     print(
-        f"Retries   : {stats.retries}"
+        f"Failures            : {stats.failures:,}"
     )
 
     print(
-        f"Elapsed   : {elapsed:.2f} sec"
+        f"Retries             : {stats.retries:,}"
     )
 
     print(
-        f"ETA       : {eta:.2f} sec"
+        f"Elapsed             : {elapsed:.2f} sec"
+    )
+
+    print(
+        f"ETA                 : {eta:.2f} sec"
     )
 
     print("=" * 70)
 
 
-# ---------------------------------------------------------------------
-# Document Processor
-# ---------------------------------------------------------------------
+# =====================================================================
+# Process One Document
+# =====================================================================
 
 def process_document(
     document: dict,
+    chunker: SemanticChunker,
     generator: SyntheticGenerator,
     writer: DatasetWriter,
     stats: Statistics,
 ):
 
-    samples = generate_with_retry(
-        generator,
-        title=document["title"],
-        text=document["text"],
+    chunks = chunker.chunk_document(
+        document
     )
 
-    for sample in samples:
+    stats.chunks += len(chunks)
 
-        sample["document_id"] = document["id"]
+    generated_samples = 0
 
-        sample["source"] = document["source"]
+    for chunk in chunks:
 
-        sample["document_title"] = document["title"]
+        samples = generator.generate(
+            chunk
+        )
 
-        writer.write(sample)
+        for sample in samples:
+
+            sample["document_id"] = chunk.document_id
+
+            sample["chunk_id"] = chunk.chunk_id
+
+            sample["title"] = chunk.title
+
+            sample["section"] = chunk.section
+
+            sample["source"] = chunk.source
+
+            sample["word_count"] = chunk.word_count
+
+            writer.write(sample)
+
+        generated_samples += len(samples)
 
     stats.documents += 1
 
-    stats.samples += len(samples)
+    stats.samples += generated_samples
 
-    return len(samples)
+    return generated_samples
 
 
-# ---------------------------------------------------------------------
-# Resume Logic
-# ---------------------------------------------------------------------
+# =====================================================================
+# Generation Loop
+# =====================================================================
 
-def get_start_index(
-    resume: bool,
-    checkpoint: CheckpointManager,
-):
+def run_generation():
 
-    if not resume:
+    args = parse_args()
 
-        return 0
-
-    state = checkpoint.load()
-
-    log(
-        f"Resuming from document {state['document_index']}"
+    (
+        checkpoint,
+        writer,
+        generator,
+        chunker,
+        stats,
+    ) = initialize(
+        resume=args.resume
     )
 
-    return state["document_index"]
+    corpus = load_corpus()
 
+    if args.limit is not None:
 
-# ---------------------------------------------------------------------
-# Dataset Initializer
-# ---------------------------------------------------------------------
+        corpus = corpus[: args.limit]
 
-def create_writer(
-    resume: bool,
-):
+    total_documents = len(corpus)
 
-    if resume:
+    start_index = get_start_index(
+        args.resume,
+        checkpoint,
+    )
 
-        writer = DatasetWriter(
-            RAW_DATASET,
-            mode="a",
+    log(
+        f"Loaded {total_documents:,} documents."
+    )
+
+    progress = tqdm(
+
+        range(start_index, total_documents),
+
+        desc="Generating",
+
+        unit="document",
+
+    )
+    for index in progress:
+
+        document = corpus[index]
+
+        progress.set_postfix(
+            {
+                "docs": stats.documents,
+                "chunks": stats.chunks,
+                "samples": stats.samples,
+                "failed": stats.failures,
+            }
         )
 
-    else:
+        try:
 
-        writer = DatasetWriter(
-            RAW_DATASET,
-            mode="w",
-        )
+            generated = process_document(
+                document=document,
+                chunker=chunker,
+                generator=generator,
+                writer=writer,
+                stats=stats,
+            )
 
-    return writer
+            checkpoint.save(
+                document_index=index + 1,
+                generated_chunks=stats.chunks,
+                generated_samples=stats.samples,
+                failed_documents=stats.failures,
+                elapsed_seconds=stats.elapsed,
+            )
+
+            log(
+                f"[{index + 1}/{total_documents}] "
+                f"SUCCESS | "
+                f"{generated} samples | "
+                f"{document['title']}"
+            )
+
+            if (index + 1) % 10 == 0:
+
+                print_progress(
+                    stats,
+                    index + 1,
+                    total_documents,
+                )
+
+        except KeyboardInterrupt:
+
+            log(
+                "Generation interrupted by user."
+            )
+
+            checkpoint.save(
+                document_index=index,
+                generated_chunks=stats.chunks,
+                generated_samples=stats.samples,
+                failed_documents=stats.failures,
+                elapsed_seconds=stats.elapsed,
+            )
+
+            writer.close()
+
+            raise
+
+        except Exception as exc:
+
+            stats.failures += 1
+
+            log(
+                f"[{index + 1}/{total_documents}] "
+                f"FAILED | "
+                f"{document['title']} | "
+                f"{type(exc).__name__}: {exc}"
+            )
+
+            checkpoint.save(
+                document_index=index + 1,
+                generated_chunks=stats.chunks,
+                generated_samples=stats.samples,
+                failed_documents=stats.failures,
+                elapsed_seconds=stats.elapsed,
+            )
+
+            continue
+
+    writer.close()
+
+    stats.summary()
+
+    # =====================================================================
+# Main
+# =====================================================================
+
+def main():
+
+    print("=" * 70)
+    print("Synthetic Dataset Generation")
+    print("=" * 70)
+    print()
+
+    start = time.time()
+
+    try:
+
+        run_generation()
+
+    except KeyboardInterrupt:
+
+        print()
+        print("=" * 70)
+        print("Generation Cancelled")
+        print("=" * 70)
+
+    except Exception as exc:
+
+        print()
+        print("=" * 70)
+        print("Fatal Error")
+        print("=" * 70)
+
+        raise
+
+    finally:
+
+        elapsed = time.time() - start
+
+        print()
+        print("=" * 70)
+        print("Execution Complete")
+        print("=" * 70)
+        print(f"Execution Time : {elapsed:.2f} sec")
+        print("=" * 70)
+
+
+if __name__ == "__main__":
+
+    main()
