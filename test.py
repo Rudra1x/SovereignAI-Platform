@@ -1,89 +1,21 @@
-from pathlib import Path
+from sovereign.synthetic.ollama_client import OllamaClient
 
-from sovereign.data.pipeline import DataPipeline
 
-from sovereign.data.extraction.engine import (
-    ExtractionEngine,
-)
+def main():
 
-from sovereign.data.extraction.extractor import (
-    KnowledgeExtractor,
-)
+    client = OllamaClient()
 
-from sovereign.data.extraction.generators.pipeline import (
-    GeneratorPipeline,
-)
-
-from sovereign.data.extraction.generators.qa import (
-    QAGenerator,
-)
-
-from sovereign.data.extraction.strategies.rule_based import (
-    RuleBasedExtractionStrategy,
-)
-
-from sovereign.data.dataset import (
-    DatasetBuilder,
-    DatasetSplitter,
-    JSONLExporter,
-)
-
-pipeline = DataPipeline()
-
-parsed = pipeline.ingest("README.md")
-
-units = (
-    ExtractionEngine(
-        KnowledgeExtractor(
-            RuleBasedExtractionStrategy()
-        )
+    response = client.generate(
+        "Explain what a Bell State is in two sentences."
     )
-    .run(parsed)
-)
 
-records = (
-    GeneratorPipeline()
-    .add(QAGenerator())
-    .run(units)
-)
+    print()
+    print("=" * 70)
+    print("MODEL OUTPUT")
+    print("=" * 70)
+    print(response)
+    print("=" * 70)
 
-dataset = (
-    DatasetBuilder(
-        "Quantum Demo"
-    )
-    .add_many(records)
-    .build()
-)
 
-train, validation, test = (
-    DatasetSplitter().split(
-        dataset
-    )
-)
-
-exporter = JSONLExporter()
-
-exporter.export(
-    train,
-    Path("data/processed/train.jsonl"),
-)
-
-exporter.export(
-    validation,
-    Path("data/processed/validation.jsonl"),
-)
-
-exporter.export(
-    test,
-    Path("data/processed/test.jsonl"),
-)
-
-print("=" * 60)
-
-print("Datasets exported successfully!")
-
-print(len(train))
-print(len(validation))
-print(len(test))
-
-print("=" * 60)
+if __name__ == "__main__":
+    main()

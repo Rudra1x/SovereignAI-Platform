@@ -4,7 +4,35 @@
 # ==========================
 # Downloaded datasets
 # ==========================
+# Python
+__pycache__/
+*.py[cod]
+*.pyd
 
+# Packaging
+build/
+dist/
+*.egg-info/
+
+# Logs
+*.log
+
+# Checkpoints
+checkpoint.json
+
+# Generated synthetic data
+data/synthetic/
+
+# Generated processed data (optional)
+# data/processed/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
 data/raw/**
 
 !data/raw/.gitkeep
