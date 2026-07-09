@@ -1,6 +1,42 @@
 # =========================
 # Python
 # =========================
+# ==========================
+# Downloaded datasets
+# ==========================
+
+data/raw/**
+
+!data/raw/.gitkeep
+
+data/processed/**
+!data/processed/.gitkeep
+
+data/interim/**
+!data/interim/.gitkeep
+
+data/artifacts/**
+!data/artifacts/.gitkeep
+
+checkpoints/**
+models/base/**
+models/merged/**
+models/quantized/**
+models/adapters/**
+
+*.pt
+*.pth
+*.bin
+*.safetensors
+*.ckpt
+*.gguf
+
+# Kaggle downloads
+kaggle.json
+
+# Python cache
+__pycache__/
+*.pyc
 __pycache__/
 *.py[cod]
 *.pyo
