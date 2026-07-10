@@ -7,7 +7,7 @@ from __future__ import annotations
 import time
 
 from sovereign.synthetic.prompt_builder import PromptBuilder
-from sovereign.synthetic.ollama_client import OllamaClient
+from sovereign.synthetic.hf_client import HFClient
 from sovereign.synthetic.json_parser import JSONParser
 from sovereign.synthetic.validator import SyntheticValidator
 from sovereign.synthetic.dataset_expander import DatasetExpander
@@ -19,7 +19,7 @@ class SyntheticGenerator:
 
         self.prompt_builder = PromptBuilder()
 
-        self.client = OllamaClient()
+        self.client = HFClient()
 
         self.parser = JSONParser()
 
@@ -44,9 +44,22 @@ class SyntheticGenerator:
                     prompt
                 )
 
+                print("\n" + "="*80)
+                print("RAW RESPONSE")
+                print("="*80)
+                print(response)
+                print("="*80)
+
                 structured = self.parser.parse(
                     response
                 )
+
+                print("\n" + "="*80)
+                print("PARSED JSON")
+                print("="*80)
+                from pprint import pprint
+                pprint(structured, width=120)
+                print("="*80)
 
                 if not self.validator.validate(
                     structured

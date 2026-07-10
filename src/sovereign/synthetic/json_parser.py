@@ -31,16 +31,35 @@ class JSONParser:
                 "",
             ).strip()
 
-        start = text.find("{")
+        match = re.search(r"\n\s*\{", text)
 
-        end = text.rfind("}")
+        if match:
+            start = match.start() + match.group().find("{")
+        else:
+            start = text.find("{")
 
-        if start == -1 or end == -1:
+        if start == -1:
 
             raise ValueError(
                 "No JSON object found."
             )
 
-        text = text[start:end + 1]
+        decoder = json.JSONDecoder()
 
-        return json.loads(text)
+        try:
+
+            obj, _ = decoder.raw_decode(text[start:])
+
+            print("\n" + "="*80)
+            print("INSIDE JSON PARSER")
+            print(type(obj))
+            print(obj)
+            print("="*80)
+
+            return obj
+
+        except json.JSONDecodeError as exc:
+
+            raise ValueError(
+                f"Invalid JSON: {exc}"
+            ) from exc

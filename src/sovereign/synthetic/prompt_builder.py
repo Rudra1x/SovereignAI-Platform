@@ -89,9 +89,13 @@ class PromptBuilder:
             "documentation": """
 Generate:
 
-- One concise summary
-- Exactly two QA pairs
+- One summary (maximum 40 words)
+- Exactly two QA pairs (each answer maximum 25 words)
 - Exactly two MCQs
+- Keep option text under 8 words.
+- Never enumerate long lists.
+- Never copy large tables or identifiers.
+- Return ONLY valid JSON.
 
 Do not generate coding tasks.
 """,
@@ -164,15 +168,15 @@ Do not generate coding tasks.
 
         if len(words) <= 900:
 
-            head = words[:350]
+            head = words[:200]
 
-            tail = words[-150:]
+            tail = words[-75:]
 
         else:
 
-            head = words[:450]
+            head = words[:250]
 
-            tail = words[-200:]
+            tail = words[-100:]
 
         return (
             " ".join(head)

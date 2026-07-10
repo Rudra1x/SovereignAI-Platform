@@ -39,19 +39,37 @@ class DatasetExpander:
                 }
             )
 
-        samples.append(
-            {
-                "instruction": f"Explain {chunk.title}.",
-                "input": "",
-                "output": structured["explanation"],
-                "metadata": {
-                    "task": "explanation",
-                    "source": chunk.source,
-                    "title": chunk.title,
-                    "section": chunk.section,
-                },
-            }
-        )
+        if explanation:
+
+            samples.append(
+                {
+                    "instruction": f"Explain {chunk.title}.",
+                    "input": "",
+                    "output": explanation,
+                    "metadata": {
+                        "task": "explanation",
+                        "source": chunk.source,
+                        "title": chunk.title,
+                        "section": chunk.section,
+                    },
+                }
+            )
+
+        elif summary:
+
+            samples.append(
+                {
+                    "instruction": f"Explain {chunk.title}.",
+                    "input": "",
+                    "output": summary,
+                    "metadata": {
+                        "task": "explanation",
+                        "source": chunk.source,
+                        "title": chunk.title,
+                        "section": chunk.section,
+                    },
+                }
+            )
 
         for item in qa:
 
