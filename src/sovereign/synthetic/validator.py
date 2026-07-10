@@ -9,12 +9,18 @@ class SyntheticValidator:
 
     REQUIRED_FIELDS = (
         "summary",
-        "explanation",
         "qa",
         "mcqs",
+    )
+
+    OPTIONAL_LIST_FIELDS = (
         "coding_tasks",
         "best_practices",
         "common_mistakes",
+    )
+
+    OPTIONAL_STRING_FIELDS = (
+        "explanation",
     )
 
     def validate(
@@ -25,10 +31,21 @@ class SyntheticValidator:
         if not isinstance(data, dict):
             return False
 
+        # --------------------------------------------------
+        # Required fields
+        # --------------------------------------------------
+
         for field in self.REQUIRED_FIELDS:
 
             if field not in data:
                 return False
+
+        # --------------------------------------------------
+        # Required types
+        # --------------------------------------------------
+
+        if not isinstance(data["summary"], str):
+            return False
 
         if not isinstance(data["qa"], list):
             return False
@@ -36,13 +53,22 @@ class SyntheticValidator:
         if not isinstance(data["mcqs"], list):
             return False
 
-        if not isinstance(data["coding_tasks"], list):
-            return False
+        # --------------------------------------------------
+        # Optional string fields
+        # --------------------------------------------------
 
-        if not isinstance(data["best_practices"], list):
-            return False
+        for field in self.OPTIONAL_STRING_FIELDS:
 
-        if not isinstance(data["common_mistakes"], list):
-            return False
+            if field in data and not isinstance(data[field], str):
+                return False
+
+        # --------------------------------------------------
+        # Optional list fields
+        # --------------------------------------------------
+
+        for field in self.OPTIONAL_LIST_FIELDS:
+
+            if field in data and not isinstance(data[field], list):
+                return False
 
         return True
