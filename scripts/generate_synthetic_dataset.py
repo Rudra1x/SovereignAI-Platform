@@ -284,9 +284,9 @@ def initialize(resume: bool):
     generator = SyntheticGenerator()
 
     chunker = SemanticChunker(
-        chunk_size=450,
-        overlap=75,
-        min_chunk_size=120,
+        chunk_size=700,
+        overlap=100,
+        min_chunk_size=150,
     )
 
     stats = Statistics()
@@ -319,41 +319,6 @@ def get_start_index(
     )
 
     return state["document_index"]
-
-
-# =====================================================================
-# Retry
-# =====================================================================
-
-def generate_chunk(
-    generator: SyntheticGenerator,
-    title: str,
-    text: str,
-    retries: int = 3,
-):
-
-    last_exception = None
-
-    for attempt in range(1, retries + 1):
-
-        try:
-
-            return generator.generate(
-                title=title,
-                text=text,
-            )
-
-        except Exception as exc:
-
-            last_exception = exc
-
-            log(
-                f"Retry {attempt}/{retries} : {title}"
-            )
-
-            time.sleep(attempt)
-
-    raise last_exception
 
 
 # =====================================================================
@@ -437,27 +402,42 @@ def process_document(
 
     for chunk in chunks:
 
-        samples = generator.generate(
-            chunk
-        )
+        try:
 
-        for sample in samples:
+            samples = generator.generate(
+                chunk
+            )
 
-            sample["document_id"] = chunk.document_id
+            for sample in samples:
 
-            sample["chunk_id"] = chunk.chunk_id
+                sample["document_id"] = chunk.document_id
+                sample["chunk_id"] = chunk.chunk_id
+                sample["title"] = chunk.title
+                sample["section"] = chunk.section
+                sample["source"] = chunk.source
+                sample["word_count"] = chunk.word_count
 
-            sample["title"] = chunk.title
+                writer.write(sample)
 
-            sample["section"] = chunk.section
+            generated_samples += len(samples)
 
-            sample["source"] = chunk.source
+        except Exception as exc:
 
-            sample["word_count"] = chunk.word_count
+            stats.failures += 1
 
-            writer.write(sample)
+            log(
 
-        generated_samples += len(samples)
+                f"Chunk Failed | "
+
+                f"{chunk.title} | "
+
+                f"Chunk {chunk.chunk_id} | "
+
+                f"{type(exc).__name__}"
+
+            )
+
+            continue
 
     stats.documents += 1
 
@@ -525,6 +505,8 @@ def run_generation():
 
         try:
 
+            chunks_before = stats.chunks
+
             generated = process_document(
                 document=document,
                 chunker=chunker,
@@ -532,6 +514,8 @@ def run_generation():
                 writer=writer,
                 stats=stats,
             )
+
+            doc_chunks = stats.chunks - chunks_before
 
             checkpoint.save(
                 document_index=index + 1,
@@ -543,8 +527,10 @@ def run_generation():
 
             log(
                 f"[{index + 1}/{total_documents}] "
-                f"SUCCESS | "
-                f"{generated} samples | "
+                f"SUCCESS |"
+                f"Doc {index + 1} |"
+                f"Chunk {doc_chunks} |"
+                f"{generated} samples |"
                 f"{document['title']}"
             )
 

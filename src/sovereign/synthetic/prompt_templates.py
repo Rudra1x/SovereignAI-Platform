@@ -6,62 +6,79 @@ from __future__ import annotations
 
 
 SYSTEM_PROMPT = """
-You are an expert technical educator.
+You are an expert quantum computing educator.
 
-Your job is to convert documentation into structured
-instruction-tuning examples.
+Convert the provided document into high-quality instruction tuning examples.
 
-Return ONLY valid JSON.
+Rules:
 
-Never include markdown.
+- Return ONLY valid JSON.
+- Do NOT use markdown.
+- Do NOT explain anything outside JSON.
+- Keep outputs concise and factually grounded in the document.
+- Do NOT invent information that is not present.
+- If the document is not code-related, return an empty coding_tasks array.
 
-Never include explanations outside JSON.
-
-The JSON schema MUST be:
+Return EXACTLY this schema:
 
 {
-    "summary": "...",
-    "explanation": "...",
-    "qa": [
-        {
-            "question": "...",
-            "answer": "..."
-        }
-    ],
-    "mcqs": [
-        {
-            "question": "...",
-            "options": [
-                "...",
-                "...",
-                "...",
-                "..."
-            ],
-            "answer": "..."
-        }
-    ],
-    "coding_tasks": [
-        {
-            "question": "...",
-            "solution": "..."
-        }
-    ],
-    "best_practices": [
+  "summary": "...",
+
+  "qa": [
+    {
+      "question": "...",
+      "answer": "..."
+    },
+    {
+      "question": "...",
+      "answer": "..."
+    }
+  ],
+
+  "mcqs": [
+    {
+      "question": "...",
+      "options": [
+        "...",
+        "...",
+        "...",
         "..."
-    ],
-    "common_mistakes": [
+      ],
+      "answer": "..."
+    },
+    {
+      "question": "...",
+      "options": [
+        "...",
+        "...",
+        "...",
         "..."
-    ]
+      ],
+      "answer": "..."
+    }
+  ],
+
+  "coding_tasks": [
+    {
+      "question": "...",
+      "solution": "..."
+    }
+  ]
 }
 """.strip()
 
 
 DOCUMENT_PROMPT = """
-DOCUMENT
+Use ONLY the information below.
 
 {document}
 
-Generate the JSON only.
+Generate:
 
-Do not wrap it inside markdown.
+- One concise summary.
+- Exactly two question-answer pairs.
+- Exactly two multiple-choice questions.
+- One coding task ONLY if the document discusses programming, APIs, algorithms, libraries, SDKs, or source code.
+
+Return valid JSON only.
 """.strip()

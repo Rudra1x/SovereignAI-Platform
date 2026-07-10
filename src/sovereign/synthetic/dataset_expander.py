@@ -15,19 +15,29 @@ class DatasetExpander:
 
         samples = []
 
-        samples.append(
-            {
-                "instruction": f"Summarize {chunk.title}.",
-                "input": "",
-                "output": structured["summary"],
-                "metadata": {
-                    "task": "summary",
-                    "source": chunk.source,
-                    "title": chunk.title,
-                    "section": chunk.section,
-                },
-            }
-        )
+        summary = structured.get("summary", "").strip()
+        qa = structured.get("qa", [])
+        mcqs = structured.get("mcqs", [])
+        coding_tasks = structured.get("coding_tasks", [])
+        best_practices = structured.get("best_practices", [])
+        common_mistakes = structured.get("common_mistakes", [])
+        explanation = structured.get("explanation", "").strip()
+
+        if summary:
+
+            samples.append(
+                {
+                    "instruction": f"Summarize {chunk.title}.",
+                    "input": "",
+                    "output": summary,
+                    "metadata": {
+                        "task": "summary",
+                        "source": chunk.source,
+                        "title": chunk.title,
+                        "section": chunk.section,
+                    },
+                }
+            )
 
         samples.append(
             {
@@ -35,25 +45,28 @@ class DatasetExpander:
                 "input": "",
                 "output": structured["explanation"],
                 "metadata": {
-                    "task": "explanation"
+                    "task": "explanation",
+                    "source": chunk.source,
+                    "title": chunk.title,
+                    "section": chunk.section,
                 },
             }
         )
 
-        for qa in structured["qa"]:
+        for item in qa:
 
             samples.append(
                 {
-                    "instruction": qa["question"],
+                    "instruction": item["question"],
                     "input": "",
-                    "output": qa["answer"],
+                    "output": item["answer"],
                     "metadata": {
                         "task": "qa"
                     },
                 }
             )
 
-        for mcq in structured["mcqs"]:
+        for mcq in mcqs:
 
             text = (
                 mcq["question"]
@@ -72,7 +85,7 @@ class DatasetExpander:
                 }
             )
 
-        for task in structured["coding_tasks"]:
+        for task in coding_tasks:
 
             samples.append(
                 {
@@ -85,7 +98,7 @@ class DatasetExpander:
                 }
             )
 
-        for practice in structured["best_practices"]:
+        for practice in best_practices:
 
             samples.append(
                 {
@@ -98,7 +111,7 @@ class DatasetExpander:
                 }
             )
 
-        for mistake in structured["common_mistakes"]:
+        for mistake in common_mistakes:
 
             samples.append(
                 {
@@ -111,4 +124,26 @@ class DatasetExpander:
                 }
             )
 
-        return samples
+        unique = []
+        
+        seen = set()
+        
+        for sample in samples:
+
+            key = (
+
+                sample["instruction"].strip().lower(),
+
+                sample["output"].strip().lower(),
+
+            )
+
+            if key in seen:
+
+                continue
+
+            seen.add(key)
+
+            unique.append(sample)
+            
+        return unique

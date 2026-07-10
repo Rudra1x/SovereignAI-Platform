@@ -4,6 +4,8 @@ Synthetic data generation pipeline.
 
 from __future__ import annotations
 
+import time
+
 from sovereign.synthetic.prompt_builder import PromptBuilder
 from sovereign.synthetic.ollama_client import OllamaClient
 from sovereign.synthetic.json_parser import JSONParser
@@ -32,17 +34,41 @@ class SyntheticGenerator:
 
         prompt = self.prompt_builder.build(chunk)
 
-        response = self.client.generate(prompt)
+        last_error = None
 
-        structured = self.parser.parse(response)
+        for attempt in range(2):
 
-        if not self.validator.validate(structured):
+            try:
 
-            raise RuntimeError(
-                "Generated JSON failed validation."
-            )
+                response = self.client.generate(
+                    prompt
+                )
 
-        return self.expander.expand(
-            chunk,
-            structured,
-        )
+                structured = self.parser.parse(
+                    response
+                )
+
+                if not self.validator.validate(
+                    structured
+                ):
+
+                    raise RuntimeError(
+                        "Generated JSON failed validation."
+                    )
+
+                return self.expander.expand(
+                    chunk,
+                    structured,
+                )
+
+            except Exception as exc:
+
+                last_error = exc
+
+                if attempt == 0:
+
+                    time.sleep(1)
+
+                    continue
+
+                raise last_error

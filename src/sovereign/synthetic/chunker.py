@@ -397,6 +397,80 @@ class SemanticChunker:
         document: dict,
     ) -> list[TextChunk]:
 
+        document_words = document.get(
+            "word_count",
+            self.word_count(document["text"])
+        )
+
+        # ---------------------------------------------------------
+        # Small documents → Single chunk
+        # ---------------------------------------------------------
+
+        if document_words <= 700:
+
+            chunk = TextChunk(
+                chunk_id=0,
+                document_id=document["id"],
+                title=document["title"],
+                source=document["source"],
+                section=document.get("title", ""),
+                text=document["text"],
+                word_count=document_words,
+                character_count=len(document["text"]),
+            )
+
+            return [chunk]
+
+        # ---------------------------------------------------------
+        # Medium documents → Two chunks
+        # ---------------------------------------------------------
+
+        if document_words <= 1400:
+
+            words = document["text"].split()
+
+            midpoint = len(words) // 2
+
+            overlap = 50
+
+            first = " ".join(
+                words[: midpoint + overlap]
+            )
+
+            second = " ".join(
+                words[max(0, midpoint - overlap):]
+            )
+
+            return [
+
+                TextChunk(
+                    chunk_id=0,
+                    document_id=document["id"],
+                    title=document["title"],
+                    source=document["source"],
+                    section=document.get("title", ""),
+                    text=first,
+                    word_count=len(first.split()),
+                    character_count=len(first),
+                ),
+
+                TextChunk(
+                    chunk_id=1,
+                    document_id=document["id"],
+                    title=document["title"],
+                    source=document["source"],
+                    section=document.get("title", ""),
+                    text=second,
+                    word_count=len(second.split()),
+                    character_count=len(second),
+                ),
+
+            ]
+
+        # ---------------------------------------------------------
+        # Large documents → Semantic chunking
+        # ---------------------------------------------------------
+
         paragraphs = self.split_paragraphs(
             document["text"]
         )
