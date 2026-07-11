@@ -25,11 +25,15 @@ class BenchmarkRunner:
         self,
         benchmark_path,
         output_path,
+        limit=None,
     ):
 
         benchmark = load_json(
             benchmark_path
         )
+
+        if limit is not None:
+            benchmark = benchmark[:limit]
 
         predictions = []
 
