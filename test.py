@@ -1,21 +1,13 @@
-from sovereign.synthetic.ollama_client import OllamaClient
+from evaluation.inference import InferenceEngine
 
+engine = InferenceEngine()
 
-def main():
+print("=" * 80)
 
-    client = OllamaClient()
-
-    response = client.generate(
-        "Explain what a Bell State is in two sentences."
+print(
+    engine.generate(
+        "What is a qubit?"
     )
+)
 
-    print()
-    print("=" * 70)
-    print("MODEL OUTPUT")
-    print("=" * 70)
-    print(response)
-    print("=" * 70)
-
-
-if __name__ == "__main__":
-    main()
+print("=" * 80)

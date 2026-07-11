@@ -1,24 +1,23 @@
 """
-Compare multiple models.
+Compare multiple models using Ollama backends.
 """
 
 from __future__ import annotations
 
-from evaluation.loader import ModelLoader
-from evaluation.inference import InferenceEngine
 from evaluation.benchmark_runner import BenchmarkRunner
+from evaluation.inference import InferenceEngine
 
 
 class ModelComparator:
 
     def __init__(
         self,
-        base_model,
+        base_model: str = "qwen2.5:3b",
+        adapter_model: str = "quantumqwen:v1",
     ):
 
-        self.loader = ModelLoader(
-            base_model,
-        )
+        self.base_model = base_model
+        self.adapter_model = adapter_model
 
     def evaluate_base(
         self,
@@ -27,11 +26,12 @@ class ModelComparator:
         limit=None,
     ):
 
-        model, tokenizer = self.loader.load_base()
+        print("\n" + "=" * 80)
+        print("BASE MODEL")
+        print("=" * 80)
 
         engine = InferenceEngine(
-            model,
-            tokenizer,
+            model=self.base_model,
         )
 
         BenchmarkRunner(
@@ -44,18 +44,17 @@ class ModelComparator:
 
     def evaluate_adapter(
         self,
-        adapter_path,
         benchmark,
         output,
+        limit=None,
     ):
 
-        model, tokenizer = self.loader.load_adapter(
-            adapter_path,
-        )
+        print("\n" + "=" * 80)
+        print("QUANTUMQWEN V1")
+        print("=" * 80)
 
         engine = InferenceEngine(
-            model,
-            tokenizer,
+            model=self.adapter_model,
         )
 
         BenchmarkRunner(
@@ -63,27 +62,25 @@ class ModelComparator:
         ).run(
             benchmark,
             output,
+            limit=limit,
         )
 
-    def evaluate_merged(
+    def evaluate_models(
         self,
-        merged_path,
         benchmark,
-        output,
+        base_output,
+        adapter_output,
+        limit=None,
     ):
 
-        model, tokenizer = self.loader.load_merged(
-            merged_path,
+        self.evaluate_base(
+            benchmark=benchmark,
+            output=base_output,
+            limit=limit,
         )
 
-        engine = InferenceEngine(
-            model,
-            tokenizer,
-        )
-
-        BenchmarkRunner(
-            engine,
-        ).run(
-            benchmark,
-            output,
+        self.evaluate_adapter(
+            benchmark=benchmark,
+            output=adapter_output,
+            limit=limit,
         )

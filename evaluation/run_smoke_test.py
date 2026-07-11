@@ -1,58 +1,67 @@
 """
-Plugin manager.
+Smoke Test
+
+Runs the first 10 benchmark questions against:
+
+1. Base Qwen
+2. QuantumQwen v1
+
+This verifies the complete evaluation pipeline before
+running the full benchmark.
 """
 
-from evaluation.plugins.quantum import QuantumPlugin
-from evaluation.plugins.coding import CodingPlugin
-from evaluation.plugins.reasoning import ReasoningPlugin
-from evaluation.plugins.hallucination import HallucinationPlugin
-from evaluation.plugins.regression import RegressionPlugin
+from pathlib import Path
+
+from evaluation.compare_models import ModelComparator
 
 
-class PluginManager:
+BENCHMARK = Path(
+    "evaluation/benchmarks/quantum_benchmark_v1.json"
+)
 
-    def __init__(self):
+OUTPUT_DIR = Path(
+    "evaluation/predictions"
+)
 
-        self.plugins = [
+OUTPUT_DIR.mkdir(
+    parents=True,
+    exist_ok=True,
+)
 
-            QuantumPlugin(),
 
-            CodingPlugin(),
+def main():
 
-            ReasoningPlugin(),
+    comparator = ModelComparator(
 
-            HallucinationPlugin(),
+        base_model="qwen2.5:3b-instruct",
 
-            RegressionPlugin(),
+        adapter_model="quantumqwen:v1",
 
-        ]
+    )
 
-    def evaluate(
+    print("=" * 80)
+    print("SMOKE TEST")
+    print("=" * 80)
 
-        self,
+    comparator.evaluate_models(
 
-        sample,
+        benchmark=BENCHMARK,
 
-        prediction,
+        base_output=OUTPUT_DIR / "base_smoke.json",
 
-    ):
+        adapter_output=OUTPUT_DIR / "adapter_smoke.json",
 
-        results = {}
+        limit=10,
 
-        for plugin in self.plugins:
+    )
 
-            if plugin.supports(sample):
+    print()
 
-                results[plugin.name] = (
+    print("=" * 80)
+    print("SMOKE TEST COMPLETE")
+    print("=" * 80)
 
-                    plugin.evaluate(
 
-                        sample,
+if __name__ == "__main__":
 
-                        prediction,
-
-                    )
-
-                )
-
-        return results
+    main()
