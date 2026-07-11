@@ -35,13 +35,50 @@ IGNORE_DIRECTORIES = {
     "assets",
     "static",
     "extracted-outputs",
+
+    # Generated documentation
+    "api",
+    "_build",
+    "_modules",
+    "generated",
+    "stubs",
 }
 
 manifest = []
 
 
+
 def should_skip(path: Path) -> bool:
-    return any(part in IGNORE_DIRECTORIES for part in path.parts)
+
+    parts = [p.lower() for p in path.parts]
+
+    # Ignore directories
+    if any(part in IGNORE_DIRECTORIES for part in parts):
+        return True
+
+    filename = path.name.lower()
+
+    # Ignore project metadata
+    skip_files = (
+        "license",
+        "copying",
+        "authors",
+        "code_of_conduct",
+        "contributing",
+        "security",
+        "changelog",
+        "release_notes",
+        "release-notes",
+    )
+
+    if any(name in filename for name in skip_files):
+        return True
+
+    # Ignore versioned API documentation
+    if "docs" in parts and "api" in parts:
+        return True
+
+    return False
 
 
 def discover():

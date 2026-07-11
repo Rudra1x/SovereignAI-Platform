@@ -36,6 +36,13 @@ from sovereign.synthetic.chunker import SemanticChunker
 from sovereign.synthetic.generator import SyntheticGenerator
 from sovereign.synthetic.writer import DatasetWriter
 
+import torch
+from transformers import (
+    AutoTokenizer,
+    AutoModelForCausalLM,
+)
+
+
 
 # =====================================================================
 # Paths

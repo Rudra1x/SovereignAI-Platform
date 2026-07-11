@@ -5,6 +5,7 @@ Synthetic data generation pipeline.
 from __future__ import annotations
 
 import time
+from pprint import pprint
 
 from sovereign.synthetic.prompt_builder import PromptBuilder
 from sovereign.synthetic.hf_client import HFClient
@@ -14,6 +15,9 @@ from sovereign.synthetic.dataset_expander import DatasetExpander
 
 
 class SyntheticGenerator:
+
+    DEBUG = False
+
 
     def __init__(self):
 
@@ -44,22 +48,23 @@ class SyntheticGenerator:
                     prompt
                 )
 
-                print("\n" + "="*80)
-                print("RAW RESPONSE")
-                print("="*80)
-                print(response)
-                print("="*80)
+                if self.DEBUG:
+                    print("\n" + "=" * 80)
+                    print("RAW RESPONSE")
+                    print("=" * 80)
+                    print(response)
+                    print("=" * 80)
 
                 structured = self.parser.parse(
                     response
                 )
 
-                print("\n" + "="*80)
-                print("PARSED JSON")
-                print("="*80)
-                from pprint import pprint
-                pprint(structured, width=120)
-                print("="*80)
+                if self.DEBUG:
+                    print("\n" + "=" * 80)
+                    print("PARSED JSON")
+                    print("=" * 80)
+                    pprint(structured, width=120)
+                    print("=" * 80)
 
                 if not self.validator.validate(
                     structured
