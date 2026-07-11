@@ -1,26 +1,39 @@
-"""
-Generate evaluation reports.
-"""
-
-import json
-
-
 class ReportGenerator:
 
-    def create(
+    def summarize(
         self,
-        metrics,
-        output_path,
+        results,
     ):
 
-        with open(
-            output_path,
-            "w",
-            encoding="utf-8",
-        ) as f:
+        summary = {
 
-            json.dump(
-                metrics,
-                f,
-                indent=4,
-            )
+            "exact_match":
+
+                sum(
+                    r["metrics"]["exact_match"]
+                    for r in results
+                ) / len(results),
+
+            "keyword_recall":
+
+                sum(
+                    r["metrics"]["keyword_recall"]
+                    for r in results
+                ) / len(results),
+
+            "bleu":
+
+                sum(
+                    r["metrics"]["bleu"]
+                    for r in results
+                ) / len(results),
+
+            "bertscore":
+
+                sum(
+                    r["metrics"]["bertscore"]
+                    for r in results
+                ) / len(results),
+        }
+
+        return summary
