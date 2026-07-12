@@ -1,0 +1,184 @@
+{
+    "base": {
+        "overall": {
+            "questions": 250,
+            "exact_match": 0.0,
+            "keyword_score": 0.5162,
+            "latency": {
+                "mean": 50.098088690799194,
+                "median": 49.34054840001045,
+                "min": 4.360076599987224,
+                "max": 122.18444699997781
+            }
+        },
+        "categories": {
+            "Fundamentals": {
+                "questions": 25,
+                "exact_match": 0.0,
+                "keyword_score": 0.666
+            },
+            "Quantum Gates": {
+                "questions": 20,
+                "exact_match": 0.0,
+                "keyword_score": 0.4725
+            },
+            "Quantum Circuits": {
+                "questions": 20,
+                "exact_match": 0.0,
+                "keyword_score": 0.51
+            },
+            "Quantum Algorithms": {
+                "questions": 30,
+                "exact_match": 0.0,
+                "keyword_score": 0.5566666666666666
+            },
+            "Qiskit": {
+                "questions": 35,
+                "exact_match": 0.0,
+                "keyword_score": 0.5385714285714286
+            },
+            "Pennylane": {
+                "questions": 20,
+                "exact_match": 0.0,
+                "keyword_score": 0.54
+            },
+            "CUDA Quantum": {
+                "questions": 15,
+                "exact_match": 0.0,
+                "keyword_score": 0.49
+            },
+            "Cirq": {
+                "questions": 10,
+                "exact_match": 0.0,
+                "keyword_score": 0.505
+            },
+            "Mitiq": {
+                "questions": 10,
+                "exact_match": 0.0,
+                "keyword_score": 0.5349999999999999
+            },
+            "Noise & Error Mitigation": {
+                "questions": 15,
+                "exact_match": 0.0,
+                "keyword_score": 0.46111111111111114
+            },
+            "Quantum Error Correction": {
+                "questions": 15,
+                "exact_match": 0.0,
+                "keyword_score": 0.4066666666666667
+            },
+            "Quantum Hardware": {
+                "questions": 15,
+                "exact_match": 0.0,
+                "keyword_score": 0.45111111111111113
+            },
+            "Quantum Machine Learning": {
+                "questions": 10,
+                "exact_match": 0.0,
+                "keyword_score": 0.42000000000000004
+            },
+            "Research & Recent Concepts": {
+                "questions": 10,
+                "exact_match": 0.0,
+                "keyword_score": 0.4666666666666667
+            }
+        }
+    },
+    "adapter": {
+        "overall": {
+            "questions": 250,
+            "exact_match": 0.0,
+            "keyword_score": 0.2856666666666667,
+            "latency": {
+                "mean": 5.157942035198444,
+                "median": 4.783366849995218,
+                "min": 1.6923740999773145,
+                "max": 18.190371400036383
+            }
+        },
+        "categories": {
+            "Fundamentals": {
+                "questions": 25,
+                "exact_match": 0.0,
+                "keyword_score": 0.348
+            },
+            "Quantum Gates": {
+                "questions": 20,
+                "exact_match": 0.0,
+                "keyword_score": 0.275
+            },
+            "Quantum Circuits": {
+                "questions": 20,
+                "exact_match": 0.0,
+                "keyword_score": 0.2125
+            },
+            "Quantum Algorithms": {
+                "questions": 30,
+                "exact_match": 0.0,
+                "keyword_score": 0.29333333333333333
+            },
+            "Qiskit": {
+                "questions": 35,
+                "exact_match": 0.0,
+                "keyword_score": 0.35571428571428576
+            },
+            "Pennylane": {
+                "questions": 20,
+                "exact_match": 0.0,
+                "keyword_score": 0.2125
+            },
+            "CUDA Quantum": {
+                "questions": 15,
+                "exact_match": 0.0,
+                "keyword_score": 0.23
+            },
+            "Cirq": {
+                "questions": 10,
+                "exact_match": 0.0,
+                "keyword_score": 0.385
+            },
+            "Mitiq": {
+                "questions": 10,
+                "exact_match": 0.0,
+                "keyword_score": 0.465
+            },
+            "Noise & Error Mitigation": {
+                "questions": 15,
+                "exact_match": 0.0,
+                "keyword_score": 0.3188888888888889
+            },
+            "Quantum Error Correction": {
+                "questions": 15,
+                "exact_match": 0.0,
+                "keyword_score": 0.2688888888888889
+            },
+            "Quantum Hardware": {
+                "questions": 15,
+                "exact_match": 0.0,
+                "keyword_score": 0.24000000000000002
+            },
+            "Quantum Machine Learning": {
+                "questions": 10,
+                "exact_match": 0.0,
+                "keyword_score": 0.18
+            },
+            "Research & Recent Concepts": {
+                "questions": 10,
+                "exact_match": 0.0,
+                "keyword_score": 0.13
+            }
+        }
+    },
+    "winner": {
+        "exact_match": {
+            "winner": "Tie",
+            "base": 0.0,
+            "adapter": 0.0
+        },
+        "keyword_score": {
+            "winner": "Base",
+            "base": 0.5162,
+            "adapter": 0.2856666666666667
+        }
+    }
+}

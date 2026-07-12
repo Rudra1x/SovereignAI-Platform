@@ -105,7 +105,7 @@ def main():
 
     comparator = ModelComparator(
 
-        base_model="qwen2.5:3b",
+        base_model="qwen2.5:3b-instruct",
 
         adapter_model="quantumqwen:v1",
 

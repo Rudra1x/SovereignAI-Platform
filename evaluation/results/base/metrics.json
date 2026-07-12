@@ -1,0 +1,85 @@
+{
+    "overall": {
+        "questions": 250,
+        "exact_match": 0.0,
+        "keyword_score": 0.5162,
+        "latency": {
+            "mean": 50.098088690799194,
+            "median": 49.34054840001045,
+            "min": 4.360076599987224,
+            "max": 122.18444699997781
+        }
+    },
+    "categories": {
+        "Fundamentals": {
+            "questions": 25,
+            "exact_match": 0.0,
+            "keyword_score": 0.666
+        },
+        "Quantum Gates": {
+            "questions": 20,
+            "exact_match": 0.0,
+            "keyword_score": 0.4725
+        },
+        "Quantum Circuits": {
+            "questions": 20,
+            "exact_match": 0.0,
+            "keyword_score": 0.51
+        },
+        "Quantum Algorithms": {
+            "questions": 30,
+            "exact_match": 0.0,
+            "keyword_score": 0.5566666666666666
+        },
+        "Qiskit": {
+            "questions": 35,
+            "exact_match": 0.0,
+            "keyword_score": 0.5385714285714286
+        },
+        "Pennylane": {
+            "questions": 20,
+            "exact_match": 0.0,
+            "keyword_score": 0.54
+        },
+        "CUDA Quantum": {
+            "questions": 15,
+            "exact_match": 0.0,
+            "keyword_score": 0.49
+        },
+        "Cirq": {
+            "questions": 10,
+            "exact_match": 0.0,
+            "keyword_score": 0.505
+        },
+        "Mitiq": {
+            "questions": 10,
+            "exact_match": 0.0,
+            "keyword_score": 0.5349999999999999
+        },
+        "Noise & Error Mitigation": {
+            "questions": 15,
+            "exact_match": 0.0,
+            "keyword_score": 0.46111111111111114
+        },
+        "Quantum Error Correction": {
+            "questions": 15,
+            "exact_match": 0.0,
+            "keyword_score": 0.4066666666666667
+        },
+        "Quantum Hardware": {
+            "questions": 15,
+            "exact_match": 0.0,
+            "keyword_score": 0.45111111111111113
+        },
+        "Quantum Machine Learning": {
+            "questions": 10,
+            "exact_match": 0.0,
+            "keyword_score": 0.42000000000000004
+        },
+        "Research & Recent Concepts": {
+            "questions": 10,
+            "exact_match": 0.0,
+            "keyword_score": 0.4666666666666667
+        }
+    }
+}
