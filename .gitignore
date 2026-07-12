@@ -236,7 +236,7 @@ merged_model/
 # Evaluation Outputs
 # ==========================================================
 evaluation/predictions/
-evaluation/reports/
+evaluation/reports/.json
 
 # ==========================================================
 # Temporary Files
