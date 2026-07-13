@@ -9,20 +9,25 @@ from evaluation.metrics.keyword_score import KeywordScore
 
 registry = MetricRegistry()
 
-registry.register(
+registry.register_record(
     ExactMatch()
 )
 
-registry.register(
+registry.register_record(
     KeywordScore()
 )
+from evaluation.metrics.bleu import BleuMetric
+from evaluation.metrics.rouge import RougeMetric
+from evaluation.metrics.bertscore import BERTScoreMetric
 
-__all__ = [
+registry.register_corpus(
+    BleuMetric()
+)
 
-    "registry",
+registry.register_corpus(
+    RougeMetric()
+)
 
-    "ExactMatch",
-
-    "KeywordScore",
-
-]
+registry.register_corpus(
+    BERTScoreMetric()
+)

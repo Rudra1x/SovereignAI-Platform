@@ -12,11 +12,11 @@ Useful for:
 from __future__ import annotations
 
 import re
-
+from evaluation.metrics.base import BaseRecordMetric
 from evaluation.metrics.base import BaseMetric
 
 
-class ExactMatch(BaseMetric):
+class ExactMatch(BaseRecordMetric):
 
     @property
     def name(self) -> str:

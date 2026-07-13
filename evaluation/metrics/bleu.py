@@ -1,37 +1,61 @@
 """
-BLEU metric.
+BLEU Metric
 """
 
 from __future__ import annotations
 
-from nltk.translate.bleu_score import sentence_bleu
-from nltk.translate.bleu_score import SmoothingFunction
+import sacrebleu
 
-from evaluation.metrics.base import BaseMetric
+from evaluation.metrics.base import BaseCorpusMetric
 
 
-class BleuScore(BaseMetric):
+class BleuMetric(BaseCorpusMetric):
 
     @property
     def name(self):
 
         return "bleu"
 
-    def score(
+    @property
+    def description(self):
+
+        return "Corpus BLEU"
+
+    def evaluate(
         self,
-        prediction: str,
-        reference: str,
-        metadata: dict,
-    ) -> float:
+        records,
+    ):
 
-        smoothie = SmoothingFunction().method4
+        predictions = []
 
-        return sentence_bleu(
+        references = []
 
-            [reference.split()],
+        for record in records:
 
-            prediction.split(),
+            predictions.append(
 
-            smoothing_function=smoothie,
+                record["model_answer"]
+
+            )
+
+            references.append(
+
+                record["reference_answer"]
+
+            )
+
+        bleu = sacrebleu.corpus_bleu(
+
+            predictions,
+
+            [references],
 
         )
+
+        return {
+
+            "metric": self.name,
+
+            "score": bleu.score,
+
+        }

@@ -62,7 +62,7 @@ class Evaluator:
 
             }
 
-            for metric in self.registry:
+            for metric in self.registry.record_metrics:
 
                 result = metric.score(record)
 
@@ -129,7 +129,11 @@ class Evaluator:
         # ----------------------------------------------------
         # Latency
         # ----------------------------------------------------
+        for metric in self.registry.corpus_metrics:
 
+         result = metric.evaluate(predictions)
+
+         report["overall"][metric.name] = result
         report["overall"][
             "latency"
         ] = LatencyMetrics.summarize(

@@ -17,7 +17,7 @@ from evaluation.utils import load_json, save_json
 
 
 BENCHMARK = Path(
-    "evaluation/benchmarks/quantum_benchmark_v1.json"
+    "evaluation/benchmarks/quantum_benchmark_dev.json"
 )
 
 PREDICTIONS = Path(

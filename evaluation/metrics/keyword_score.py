@@ -5,9 +5,9 @@ Keyword Coverage Metric
 from __future__ import annotations
 
 from evaluation.metrics.base import BaseMetric
+from evaluation.metrics.base import BaseRecordMetric
 
-
-class KeywordScore(BaseMetric):
+class KeywordScore(BaseRecordMetric):
 
     @property
     def name(self):

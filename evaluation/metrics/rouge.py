@@ -1,15 +1,15 @@
 """
-ROUGE-L metric.
+ROUGE-L Metric
 """
 
 from __future__ import annotations
 
 from rouge_score import rouge_scorer
 
-from evaluation.metrics.base import BaseMetric
+from evaluation.metrics.base import BaseCorpusMetric
 
 
-class RougeScore(BaseMetric):
+class RougeMetric(BaseCorpusMetric):
 
     def __init__(self):
 
@@ -26,19 +26,40 @@ class RougeScore(BaseMetric):
 
         return "rouge"
 
-    def score(
+    @property
+    def description(self):
+
+        return "ROUGE-L"
+
+    def evaluate(
         self,
-        prediction: str,
-        reference: str,
-        metadata: dict,
-    ) -> float:
+        records,
+    ):
 
-        score = self.scorer.score(
+        scores = []
 
-            reference,
+        for record in records:
 
-            prediction,
+            result = self.scorer.score(
 
-        )
+                record["reference_answer"],
 
-        return score["rougeL"].fmeasure
+                record["model_answer"],
+
+            )
+
+            scores.append(
+
+                result["rougeL"].fmeasure
+
+            )
+
+        return {
+
+            "metric": self.name,
+
+            "score": sum(scores) / len(scores),
+
+            "per_question": scores,
+
+        }
