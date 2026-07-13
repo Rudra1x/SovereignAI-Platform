@@ -1,38 +1,90 @@
 """
-Base class for all evaluation metrics.
+Base Metric Interface
+
+Every evaluation metric in the framework must inherit from BaseMetric.
+
+The metric receives a complete prediction record and returns
+a structured dictionary describing the evaluation result.
+
+Author:
+    QuantumQwen Evaluation Framework
 """
 
 from __future__ import annotations
 
 from abc import ABC
 from abc import abstractmethod
+from typing import Any
 
 
 class BaseMetric(ABC):
     """
-    Base class that every metric must inherit.
+    Base class for every evaluation metric.
     """
 
     @property
     @abstractmethod
     def name(self) -> str:
         """
-        Metric name.
+        Unique metric name.
+
+        Example:
+            bertscore
+            rouge
+            bleu
+            keyword_score
         """
-        pass
+        raise NotImplementedError
+
+    @property
+    def description(self) -> str:
+        """
+        Human-readable description.
+        """
+
+        return self.__class__.__name__
 
     @abstractmethod
     def score(
         self,
-        prediction: str,
-        reference: str,
-        metadata: dict,
-    ):
+        record: dict[str, Any],
+    ) -> dict[str, Any]:
         """
-        Calculate the metric.
+        Evaluate a single prediction.
 
-        Returns either:
-        - float
-        - dict
+        Parameters
+        ----------
+        record
+
+            Prediction dictionary.
+
+            Example
+
+            {
+                "id": 17,
+                "question": "...",
+                "reference_answer": "...",
+                "model_answer": "...",
+                "keywords": [...],
+                "latency": 4.82,
+                "category": "...",
+                "difficulty": "..."
+            }
+
+        Returns
+        -------
+
+        Dictionary.
+
+        Example
+
+        {
+            "metric": "keyword_score",
+            "score": 0.83
+        }
         """
-        pass
+        raise NotImplementedError
+
+    def __repr__(self) -> str:
+
+        return f"{self.__class__.__name__}(name='{self.name}')"

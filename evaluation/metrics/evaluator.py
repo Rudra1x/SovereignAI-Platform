@@ -1,121 +1,139 @@
 """
-Evaluation engine.
+Evaluation Engine
 
-Aggregates all metrics into a single report.
+Runs every registered metric on every prediction and
+produces an aggregated evaluation report.
 """
 
 from __future__ import annotations
 
-from pathlib import Path
 from collections import defaultdict
+from statistics import mean
+from typing import Any
 
-from evaluation.utils import load_json
-from evaluation.metrics import (
-    ExactMatch,
-    KeywordScore,
-    LatencyMetrics,
-)
+from evaluation.metrics import registry
+from evaluation.metrics.latency import LatencyMetrics
 
 
 class Evaluator:
+    """
+    Main evaluation engine.
+    """
 
     def __init__(self):
 
-        self.exact_match = ExactMatch()
-        self.keyword_score = KeywordScore()
+        self.registry = registry
 
     def evaluate(
         self,
-        prediction_file: str | Path,
-    ) -> dict:
-
-        predictions = load_json(prediction_file)
-
-        overall = {
-
-            "questions": len(predictions),
-
-            "exact_match": [],
-
-            "keyword_score": [],
-
-            "latency": [],
-        }
-
-        category_scores = defaultdict(
-            lambda: {
-                "questions": 0,
-                "exact_match": [],
-                "keyword_score": [],
-            }
-        )
-
-        for item in predictions:
-
-            exact = self.exact_match.score(
-                prediction=item["model_answer"],
-                reference=item["reference_answer"],
-            )
-
-            keyword = self.keyword_score.score(
-                prediction=item["model_answer"],
-                keywords=item.get("keywords", []),
-            )
-
-            latency = item["latency"]
-
-            overall["exact_match"].append(exact)
-            overall["keyword_score"].append(keyword)
-            overall["latency"].append(latency)
-
-            category = item["category"]
-
-            category_scores[category]["questions"] += 1
-            category_scores[category]["exact_match"].append(exact)
-            category_scores[category]["keyword_score"].append(keyword)
+        predictions: list[dict[str, Any]],
+    ) -> dict[str, Any]:
 
         report = {
 
-            "overall": {
-
-                "questions": overall["questions"],
-
-                "exact_match":
-
-                    sum(overall["exact_match"])
-                    / max(1, len(overall["exact_match"])),
-
-                "keyword_score":
-
-                    sum(overall["keyword_score"])
-                    / max(1, len(overall["keyword_score"])),
-
-                "latency":
-
-                    LatencyMetrics.summarize(
-                        overall["latency"]
-                    ),
-            },
+            "overall": {},
 
             "categories": {},
+
+            "questions": [],
         }
 
-        for category, values in category_scores.items():
+        metric_scores = defaultdict(list)
 
-            report["categories"][category] = {
+        category_scores = defaultdict(
+            lambda: defaultdict(list)
+        )
 
-                "questions": values["questions"],
+        # ----------------------------------------------------
+        # Evaluate every prediction
+        # ----------------------------------------------------
 
-                "exact_match":
+        for record in predictions:
 
-                    sum(values["exact_match"])
-                    / max(1, len(values["exact_match"])),
+            question_result = {
 
-                "keyword_score":
+                "id": record.get("id"),
 
-                    sum(values["keyword_score"])
-                    / max(1, len(values["keyword_score"])),
+                "category": record.get("category"),
+
+                "difficulty": record.get("difficulty"),
+
+                "metrics": {},
 
             }
+
+            for metric in self.registry:
+
+                result = metric.score(record)
+
+                question_result["metrics"][
+                    metric.name
+                ] = result
+
+                if "score" in result:
+
+                    metric_scores[
+                        metric.name
+                    ].append(
+                        result["score"]
+                    )
+
+                    category_scores[
+                        record["category"]
+                    ][
+                        metric.name
+                    ].append(
+                        result["score"]
+                    )
+
+            report["questions"].append(
+                question_result
+            )
+
+        # ----------------------------------------------------
+        # Overall Scores
+        # ----------------------------------------------------
+
+        for metric_name, values in metric_scores.items():
+
+            report["overall"][metric_name] = {
+
+                "mean": mean(values),
+
+                "count": len(values),
+
+            }
+
+        # ----------------------------------------------------
+        # Category Scores
+        # ----------------------------------------------------
+
+        for category in category_scores:
+
+            report["categories"][category] = {}
+
+            for metric_name, values in category_scores[
+                category
+            ].items():
+
+                report["categories"][
+                    category
+                ][metric_name] = {
+
+                    "mean": mean(values),
+
+                    "count": len(values),
+
+                }
+
+        # ----------------------------------------------------
+        # Latency
+        # ----------------------------------------------------
+
+        report["overall"][
+            "latency"
+        ] = LatencyMetrics.summarize(
+            predictions
+        )
 
         return report

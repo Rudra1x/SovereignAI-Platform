@@ -8,6 +8,7 @@ import json
 from pathlib import Path
 
 from evaluation.metrics.evaluator import Evaluator
+from evaluation.utils import load_json
 
 
 class ReportGenerator:
@@ -35,10 +36,14 @@ class ReportGenerator:
         exist_ok=True,
 
     )
+     
+     predictions = load_json(
+        prediction_file)
+     
 
      report = self.evaluator.evaluate(
 
-        prediction_file
+        predictions
 
     )
 
@@ -79,5 +84,6 @@ class ReportGenerator:
       report,
       output_dir,
 )
+
 
      return report

@@ -1,29 +1,83 @@
 """
-Keyword coverage metric.
+Keyword Coverage Metric
 """
 
 from __future__ import annotations
 
+from evaluation.metrics.base import BaseMetric
 
-class KeywordScore:
 
-    @staticmethod
+class KeywordScore(BaseMetric):
+
+    @property
+    def name(self):
+
+        return "keyword_score"
+
+    @property
+    def description(self):
+
+        return "Keyword Coverage"
+
     def score(
-        prediction: str,
-        keywords: list[str],
-    ) -> float:
+        self,
+        record: dict,
+    ) -> dict:
+
+        prediction = record["model_answer"].lower()
+
+        keywords = [
+
+            k.lower()
+
+            for k in record.get(
+
+                "keywords",
+
+                [],
+
+            )
+
+        ]
 
         if not keywords:
-            return 1.0
 
-        prediction = prediction.lower()
+            return {
 
-        hits = 0
+                "metric": self.name,
+
+                "score": 1.0,
+
+                "hits": [],
+
+                "missing": [],
+
+            }
+
+        hits = []
+
+        missing = []
 
         for keyword in keywords:
 
-            if keyword.lower() in prediction:
+            if keyword in prediction:
 
-                hits += 1
+                hits.append(keyword)
 
-        return hits / len(keywords)
+            else:
+
+                missing.append(keyword)
+
+        score = len(hits) / len(keywords)
+
+        return {
+
+            "metric": self.name,
+
+            "score": score,
+
+            "hits": hits,
+
+            "missing": missing,
+
+        }

@@ -1,16 +1,32 @@
 """
-Exact Match metric.
+Exact Match Metric
+
+Useful for:
+
+- MCQ
+- True / False
+- One-word answers
+- Short factual answers
 """
-from evaluation.metrics.base import BaseMetric
+
 from __future__ import annotations
 
+import re
 
-class ExactMatch:
+from evaluation.metrics.base import BaseMetric
+
+
+class ExactMatch(BaseMetric):
 
     @property
-    def name(self):
+    def name(self) -> str:
 
         return "exact_match"
+
+    @property
+    def description(self) -> str:
+
+        return "Exact string match"
 
     @staticmethod
     def normalize(text: str) -> str:
@@ -18,29 +34,37 @@ class ExactMatch:
         if text is None:
             return ""
 
-        return (
-            text.strip()
-            .lower()
-            .replace(".", "")
-            .replace(",", "")
-            .replace("\n", " ")
+        text = text.lower()
+
+        text = re.sub(r"\s+", " ", text)
+
+        text = text.strip()
+
+        return text
+
+    def score(
+        self,
+        record: dict,
+    ) -> dict:
+
+        prediction = self.normalize(
+            record["model_answer"]
         )
 
-    @classmethod
-    def score(
-        cls,
-        prediction: str,
-        reference: str,
-    ) -> float:
+        reference = self.normalize(
+            record["reference_answer"]
+        )
 
-        prediction = cls.normalize(prediction)
-        reference = cls.normalize(reference)
+        score = float(
+            prediction == reference
+        )
 
-        return float(prediction == reference)
-    
-class KeywordScore(BaseMetric):
+        return {
 
-    @property
-    def name(self):
+            "metric": self.name,
 
-        return "keyword_score"
+            "score": score,
+
+            "matched": bool(score),
+
+        }

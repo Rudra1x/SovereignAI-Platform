@@ -1,5 +1,5 @@
 """
-Latency metrics.
+Latency Metric
 """
 
 from __future__ import annotations
@@ -12,26 +12,39 @@ class LatencyMetrics:
 
     @staticmethod
     def summarize(
-        values: list[float],
+        records: list[dict],
     ) -> dict:
 
-        if not values:
+        latencies = [
+
+            r["latency"]
+
+            for r in records
+
+        ]
+
+        if not latencies:
 
             return {
+
                 "mean": 0,
+
                 "median": 0,
+
                 "min": 0,
+
                 "max": 0,
+
             }
 
         return {
 
-            "mean": mean(values),
+            "mean": mean(latencies),
 
-            "median": median(values),
+            "median": median(latencies),
 
-            "min": min(values),
+            "min": min(latencies),
 
-            "max": max(values),
+            "max": max(latencies),
 
         }
