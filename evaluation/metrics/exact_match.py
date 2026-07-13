@@ -1,11 +1,16 @@
 """
 Exact Match metric.
 """
-
+from evaluation.metrics.base import BaseMetric
 from __future__ import annotations
 
 
 class ExactMatch:
+
+    @property
+    def name(self):
+
+        return "exact_match"
 
     @staticmethod
     def normalize(text: str) -> str:
@@ -32,3 +37,10 @@ class ExactMatch:
         reference = cls.normalize(reference)
 
         return float(prediction == reference)
+    
+class KeywordScore(BaseMetric):
+
+    @property
+    def name(self):
+
+        return "keyword_score"
