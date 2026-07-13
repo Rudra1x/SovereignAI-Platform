@@ -7,6 +7,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from build.lib.sovereign.data.parsers import pdf
+from evaluation import report
 from evaluation.metrics.evaluator import Evaluator
 from evaluation.utils import load_json
 
@@ -84,6 +86,13 @@ class ReportGenerator:
       report,
       output_dir,
 )
+     from evaluation.reports.pdf_generator import PDFReportGenerator
+
+     pdf = PDFReportGenerator()
+
+     pdf.generate(report,
+                  output_dir,
+                  )
 
 
      return report
