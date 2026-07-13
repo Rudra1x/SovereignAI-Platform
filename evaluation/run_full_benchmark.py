@@ -54,40 +54,61 @@ def compare_reports(
 
     }
 
-    metrics = [
-
-        "exact_match",
-
-        "keyword_score",
-
-    ]
+    metrics = sorted(
+        set(base_report["overall"].keys())
+        &
+        set(adapter_report["overall"].keys())
+    )
 
     for metric in metrics:
 
-        base = base_report["overall"][metric]
+        base_metric = base_report["overall"][metric]
 
-        adapter = adapter_report["overall"][metric]
+        adapter_metric = adapter_report["overall"][metric]
 
+
+        def metric_value(value):
+
+            if not isinstance(value, dict):
+                return value
+            
+            if "mean" in value:
+                return value["mean"]
+            if "f1" in value:
+                return value["f1"]
+            if "score" in value:
+                return value["score"]
+            return None
+        
+        base = metric_value(base_metric)
+        adapter = metric_value(adapter_metric)
+
+        if base is None or adapter is None:
+            continue
         if adapter > base:
+            winner = "QuantumQwen"
+            
+        if adapter_metric > base_metric:
 
             winner = "QuantumQwen"
-
         elif base > adapter:
-
             winner = "Base"
-
         else:
-
             winner = "Tie"
-
-        comparison["winner"][metric] = {
-
+        
+        comparison["Winner"][metric] = {
             "winner": winner,
 
             "base": base,
 
             "adapter": adapter,
+            "improvement percent": 
+              round(
+                  ((adapter - base) / abs(base)) * 100,
+                  2,
 
+              )
+              if base != 0 else None,
         }
 
     save_json(
@@ -130,21 +151,24 @@ def main():
     print("\nGenerating Base Report...")
 
     base_report = generator.generate(
-
-        PREDICTIONS / "base_predictions.json",
-
-        RESULTS / "base",
+        
+        prediction_file = PREDICTIONS / "base_predictions.json",
+        output_dir = RESULTS / "base",
+        model_name = "Qwen 2.5B-instruct",
+        benchmark_name = "Quantum Benchmark Dev (100)",
 
     )
 
     print("\nGenerating QuantumQwen Report...")
 
     adapter_report = generator.generate(
+        prediction_file=PREDICTIONS / "adapter_predictions.json",
 
-        PREDICTIONS / "adapter_predictions.json",
+        output_dir=RESULTS / "adapter",
 
-        RESULTS / "adapter",
+        model_name="QuantumQwen v1",
 
+        benchmark_name="Quantum Benchmark Dev (100)",
     )
 
     comparison = compare_reports(

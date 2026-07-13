@@ -1,16 +1,26 @@
 """
-Evaluation report generator.
+Evaluation Report Generator
+
+Responsible for:
+
+1. Loading prediction JSON
+2. Running the evaluator
+3. Saving metrics.json
+4. Generating markdown
+5. Generating charts
+6. Generating PDF
 """
 
 from __future__ import annotations
 
 import json
 from pathlib import Path
+from datetime import datetime
 
-from build.lib.sovereign.data.parsers import pdf
-from evaluation import report
 from evaluation.metrics.evaluator import Evaluator
-from evaluation.utils import load_json
+from evaluation.reports.markdown import MarkdownReport
+from evaluation.reports.charts import ChartGenerator
+from evaluation.reports.pdf_generator import PDFReportGenerator
 
 
 class ReportGenerator:
@@ -20,79 +30,139 @@ class ReportGenerator:
         self.evaluator = Evaluator()
 
     def generate(
+        self,
+        prediction_file: str | Path,
+        output_dir: str | Path,
+        model_name: str = "Unknown",
+        benchmark_name: str = "Unknown",
+    ) -> dict:
 
-    self,
+        prediction_file = Path(prediction_file)
 
-    prediction_file,
+        output_dir = Path(output_dir)
 
-    output_dir,
-
-):
-
-     output_dir = Path(output_dir)
-
-     output_dir.mkdir(
-
-        parents=True,
-
-        exist_ok=True,
-
-    )
-     
-     predictions = load_json(
-        prediction_file)
-     
-
-     report = self.evaluator.evaluate(
-
-        predictions
-
-    )
-
-     metrics_file = output_dir / "metrics.json"
-
-     with open(
-
-        metrics_file,
-
-        "w",
-
-        encoding="utf-8",
-
-     ) as f:
-
-        json.dump(
-
-            report,
-
-            f,
-
-            indent=4,
-
+        output_dir.mkdir(
+            parents=True,
+            exist_ok=True,
         )
 
-     from evaluation.reports.markdown import MarkdownReport
+        # ----------------------------------------------------------
+        # Load predictions
+        # ----------------------------------------------------------
 
-     MarkdownReport.write(
+        with open(
+            prediction_file,
+            "r",
+            encoding="utf-8",
+        ) as f:
 
-        report,
+            predictions = json.load(f)
 
-        output_dir / "evaluation_report.md",
+        # ----------------------------------------------------------
+        # Evaluate
+        # ----------------------------------------------------------
 
-    )
-     from evaluation.reports.charts import ChartGenerator
+        with open(
+            prediction_file,
+            "r",
+            encoding="utf-8",
+        ) as f:
 
-     ChartGenerator.generate_all(
-      report,
-      output_dir,
-)
-     from evaluation.reports.pdf_generator import PDFReportGenerator
+            predictions = json.load(f)
+        report = self.evaluator.evaluate(
+            predictions
+        )
 
-     pdf = PDFReportGenerator()
+        # ----------------------------------------------------------
+        # Metadata
+        # ----------------------------------------------------------
 
-     pdf.generate(report,
-                  output_dir,
-                  )
+        report["metadata"] = {
 
+            "model": model_name,
 
-     return report
+            "benchmark": benchmark_name,
+
+            "generated_at": datetime.now().strftime(
+                "%Y-%m-%d %H:%M:%S"
+            ),
+
+            "questions": len(predictions),
+
+        }
+
+        # ----------------------------------------------------------
+        # Save JSON
+        # ----------------------------------------------------------
+
+        metrics_path = output_dir / "metrics.json"
+
+        with open(
+            metrics_path,
+            "w",
+            encoding="utf-8",
+        ) as f:
+
+            json.dump(
+                report,
+                f,
+                indent=4,
+                ensure_ascii=False,
+            )
+
+        print(f"Saved metrics -> {metrics_path}")
+
+        # ----------------------------------------------------------
+        # Markdown
+        # ----------------------------------------------------------
+
+        markdown_path = (
+            output_dir
+            / "evaluation_report.md"
+        )
+
+        MarkdownReport.write(
+            report,
+            markdown_path,
+        )
+
+        print(f"Saved markdown -> {markdown_path}")
+
+        # ----------------------------------------------------------
+        # Charts
+        # ----------------------------------------------------------
+
+        ChartGenerator.generate_all(
+            report,
+            output_dir,
+        )
+
+        # ----------------------------------------------------------
+        # PDF
+        # ----------------------------------------------------------
+
+        PDFReportGenerator().generate(
+            report,
+            output_dir,
+        )
+
+        print(
+            "\n"
+            + "=" * 70
+        )
+
+        print("REPORT GENERATION COMPLETE")
+
+        print("=" * 70)
+
+        print(f"Model      : {model_name}")
+
+        print(f"Benchmark  : {benchmark_name}")
+
+        print(f"Questions  : {len(predictions)}")
+
+        print(f"Output     : {output_dir}")
+
+        print("=" * 70)
+
+        return report

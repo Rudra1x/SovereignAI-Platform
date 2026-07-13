@@ -1,103 +1,166 @@
 """
-Markdown report writer.
+Markdown Report Generator
+
+Generates a human-readable markdown report from the
+evaluation report dictionary.
 """
 
 from __future__ import annotations
 
 from pathlib import Path
+from datetime import datetime
 
 
 class MarkdownReport:
 
     @staticmethod
+    def _format_metric(metric_value: dict) -> str:
+        """
+        Convert a metric dictionary into a readable string.
+        """
+
+        if not isinstance(metric_value, dict):
+            return str(metric_value)
+
+        if "f1" in metric_value:
+            return f"{metric_value['f1']:.4f}"
+
+        if "score" in metric_value:
+            return f"{metric_value['score']:.4f}"
+
+        if "mean" in metric_value:
+            return f"{metric_value['mean']:.4f}"
+
+        return str(metric_value)
+
+    @staticmethod
     def write(
-
-        report,
-
-        output_file,
-
+        report: dict,
+        output_file: str | Path,
     ):
 
         output_file = Path(output_file)
 
-        overall = report["overall"]
+        overall = report.get("overall", {})
+        categories = report.get("categories", {})
+        questions = report.get("questions", [])
 
         with open(
-
             output_file,
-
             "w",
-
             encoding="utf-8",
-
         ) as f:
+
+            # ============================================================
+            # Title
+            # ============================================================
 
             f.write("# QuantumQwen Evaluation Report\n\n")
 
-            f.write("## Overall\n\n")
+            f.write(
+                f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}\n\n"
+            )
 
-            f.write(f"Questions: {overall['questions']}\n\n")
+            f.write("---\n\n")
+
+            # ============================================================
+            # Executive Summary
+            # ============================================================
+
+            f.write("## Executive Summary\n\n")
 
             f.write(
-
-                f"Exact Match: {overall['exact_match']:.3f}\n\n"
-
+                f"- Total Questions Evaluated: **{len(questions)}**\n"
             )
 
             f.write(
-
-                f"Keyword Score: {overall['keyword_score']:.3f}\n\n"
-
-            )
-
-            latency = overall["latency"]
-
-            f.write("## Latency\n\n")
-
-            f.write(
-
-                f"- Mean: {latency['mean']:.2f}s\n"
-
+                f"- Categories Evaluated: **{len(categories)}**\n"
             )
 
             f.write(
-
-                f"- Median: {latency['median']:.2f}s\n"
-
+                f"- Metrics Computed: **{len(overall)}**\n\n"
             )
 
-            f.write(
+            # ============================================================
+            # Overall Metrics
+            # ============================================================
 
-                f"- Min: {latency['min']:.2f}s\n"
+            f.write("## Overall Metrics\n\n")
 
-            )
+            f.write("| Metric | Value |\n")
+            f.write("|--------|------:|\n")
 
-            f.write(
+            for metric_name, metric_value in overall.items():
 
-                f"- Max: {latency['max']:.2f}s\n\n"
-
-            )
-
-            f.write("## Category Scores\n\n")
-
-            for category, scores in report["categories"].items():
-
-                f.write(f"### {category}\n\n")
-
-                f.write(
-
-                    f"- Questions: {scores['questions']}\n"
-
+                display = MarkdownReport._format_metric(
+                    metric_value
                 )
 
                 f.write(
-
-                    f"- Exact Match: {scores['exact_match']:.3f}\n"
-
+                    f"| {metric_name} | {display} |\n"
                 )
 
-                f.write(
+            f.write("\n")
 
-                    f"- Keyword Score: {scores['keyword_score']:.3f}\n\n"
+            # ============================================================
+            # Category Scores
+            # ============================================================
 
-                )
+            if categories:
+
+                f.write("## Category Performance\n\n")
+
+                for category, metrics in categories.items():
+
+                    f.write(f"### {category}\n\n")
+
+                    f.write("| Metric | Value |\n")
+                    f.write("|--------|------:|\n")
+
+                    for metric_name, metric_value in metrics.items():
+
+                        display = MarkdownReport._format_metric(
+                            metric_value
+                        )
+
+                        f.write(
+                            f"| {metric_name} | {display} |\n"
+                        )
+
+                    f.write("\n")
+
+            # ============================================================
+            # Recommendations
+            # ============================================================
+
+            f.write("## Recommendations\n\n")
+
+            f.write(
+                "- Review the lowest scoring categories.\n"
+            )
+
+            f.write(
+                "- Perform manual inspection of failure cases.\n"
+            )
+
+            f.write(
+                "- Compare results against previous model versions.\n"
+            )
+
+            f.write(
+                "- Use LLM-as-a-Judge to complement automatic metrics.\n"
+            )
+
+            f.write("\n")
+
+            # ============================================================
+            # Footer
+            # ============================================================
+
+            f.write("---\n\n")
+
+            f.write(
+                "Automatically generated by the QuantumQwen Evaluation Framework.\n"
+            )
+
+        print(f"Markdown report written to: {output_file}")

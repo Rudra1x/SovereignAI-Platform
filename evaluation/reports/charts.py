@@ -1,5 +1,9 @@
 """
-Chart generation for evaluation reports.
+Chart Generator
+
+Creates charts from the evaluation report.
+
+Uses matplotlib only.
 """
 
 from __future__ import annotations
@@ -12,64 +16,113 @@ import matplotlib.pyplot as plt
 class ChartGenerator:
 
     @staticmethod
-    def latency_chart(report: dict, output_dir: str | Path):
+    def _extract_metric(metric_value):
 
-        output_dir = Path(output_dir)
-        output_dir.mkdir(parents=True, exist_ok=True)
+        if not isinstance(metric_value, dict):
+            return None
 
-        latency = report["overall"]["latency"]
+        if "f1" in metric_value:
+            return metric_value["f1"]
 
-        labels = ["Mean", "Median", "Min", "Max"]
+        if "score" in metric_value:
+            return metric_value["score"]
 
-        values = [
-            latency["mean"],
-            latency["median"],
-            latency["min"],
-            latency["max"],
-        ]
+        if "mean" in metric_value:
+            return metric_value["mean"]
 
-        plt.figure(figsize=(8, 5))
+        return None
 
-        plt.bar(labels, values)
+    @staticmethod
+    def generate_overall_metrics(
+        report: dict,
+        output_dir: Path,
+    ):
 
-        plt.ylabel("Seconds")
+        overall = report.get("overall", {})
 
-        plt.title("Latency Summary")
+        metrics = []
+        values = []
+
+        for metric_name, metric_data in overall.items():
+
+            value = ChartGenerator._extract_metric(
+                metric_data
+            )
+
+            if value is None:
+                continue
+
+            metrics.append(metric_name)
+
+            values.append(value)
+
+        if not metrics:
+            return
+
+        plt.figure(figsize=(10, 5))
+
+        plt.bar(metrics, values)
+
+        plt.title("Overall Metrics")
+
+        plt.ylabel("Score")
+
+        plt.xticks(rotation=25)
 
         plt.tight_layout()
 
         plt.savefig(
-            output_dir / "latency.png",
+            output_dir / "overall_metrics.png",
             dpi=300,
         )
 
         plt.close()
 
     @staticmethod
-    def category_chart(report: dict, output_dir: str | Path):
+    def generate_category_scores(
+        report: dict,
+        output_dir: Path,
+    ):
 
-        output_dir = Path(output_dir)
+        categories = report.get("categories", {})
 
-        categories = []
+        if not categories:
+            return
+
+        category_names = []
+
         scores = []
 
-        for category, result in report["categories"].items():
+        for category, metrics in categories.items():
 
-            categories.append(category)
+            total = []
 
-            scores.append(
-                result["keyword_score"]
-            )
+            for metric_data in metrics.values():
 
-        plt.figure(figsize=(10, 6))
+                value = ChartGenerator._extract_metric(
+                    metric_data
+                )
 
-        plt.barh(categories, scores)
+                if value is not None:
 
-        plt.xlim(0, 1)
+                    total.append(value)
 
-        plt.xlabel("Keyword Score")
+            if not total:
+                continue
+
+            category_names.append(category)
+
+            scores.append(sum(total) / len(total))
+
+        plt.figure(figsize=(10, 5))
+
+        plt.bar(category_names, scores)
 
         plt.title("Category Performance")
+
+        plt.ylabel("Average Score")
+
+        plt.xticks(rotation=30)
 
         plt.tight_layout()
 
@@ -81,38 +134,62 @@ class ChartGenerator:
         plt.close()
 
     @staticmethod
-    def overall_chart(report: dict, output_dir: str | Path):
+    def generate_latency(
+        report: dict,
+        output_dir: Path,
+    ):
 
-        output_dir = Path(output_dir)
+        latency = report.get(
+            "overall",
+            {},
+        ).get(
+            "latency",
+            {},
+        )
 
-        metrics = [
-            "Exact Match",
-            "Keyword Score",
+        if not latency:
+            return
+
+        labels = [
+
+            "Mean",
+
+            "Median",
+
+            "Min",
+
+            "Max",
+
         ]
 
         values = [
 
-            report["overall"]["exact_match"],
+            latency.get("mean", 0),
 
-            report["overall"]["keyword_score"],
+            latency.get("median", 0),
+
+            latency.get("min", 0),
+
+            latency.get("max", 0),
 
         ]
 
-        plt.figure(figsize=(6, 5))
+        plt.figure(figsize=(8, 5))
 
-        plt.bar(metrics, values)
+        plt.bar(labels, values)
 
-        plt.ylim(0, 1)
+        plt.title("Inference Latency")
 
-        plt.ylabel("Score")
-
-        plt.title("Overall Metrics")
+        plt.ylabel("Seconds")
 
         plt.tight_layout()
 
         plt.savefig(
-            output_dir / "overall_metrics.png",
+
+            output_dir / "latency.png",
+
             dpi=300,
+
         )
 
         plt.close()
@@ -120,21 +197,32 @@ class ChartGenerator:
     @classmethod
     def generate_all(
         cls,
-        report,
-        output_dir,
+        report: dict,
+        output_dir: str | Path,
     ):
 
-        cls.latency_chart(
+        output_dir = Path(output_dir)
+
+        output_dir.mkdir(
+            parents=True,
+            exist_ok=True,
+        )
+
+        cls.generate_overall_metrics(
             report,
             output_dir,
         )
 
-        cls.category_chart(
+        cls.generate_category_scores(
             report,
             output_dir,
         )
 
-        cls.overall_chart(
+        cls.generate_latency(
             report,
             output_dir,
         )
+
+        print("=" * 70)
+        print("Charts generated successfully.")
+        print("=" * 70)
