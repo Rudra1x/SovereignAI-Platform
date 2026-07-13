@@ -44,71 +44,123 @@ def compare_reports(
     adapter_report: dict,
 ):
 
+    def metric_value(metric):
+
+        if metric is None:
+            return None
+
+        if not isinstance(metric, dict):
+            return metric
+
+        # Priority of values to compare
+        for key in (
+            "f1",
+            "score",
+            "mean",
+            "accuracy",
+            "precision",
+            "recall",
+        ):
+
+            if key in metric:
+                return metric[key]
+
+        return None
+
     comparison = {
 
-        "base": base_report,
+        "base": {},
 
-        "adapter": adapter_report,
+        "adapter": {},
 
         "winner": {},
 
     }
 
-    metrics = sorted(
+    common_metrics = sorted(
+
         set(base_report["overall"].keys())
+
         &
+
         set(adapter_report["overall"].keys())
+
     )
 
-    for metric in metrics:
+    for metric in common_metrics:
 
-        base_metric = base_report["overall"][metric]
+        base = metric_value(
 
-        adapter_metric = adapter_report["overall"][metric]
+            base_report["overall"][metric]
 
+        )
 
-        def metric_value(value):
+        adapter = metric_value(
 
-            if not isinstance(value, dict):
-                return value
-            
-            if "mean" in value:
-                return value["mean"]
-            if "f1" in value:
-                return value["f1"]
-            if "score" in value:
-                return value["score"]
-            return None
-        
-        base = metric_value(base_metric)
-        adapter = metric_value(adapter_metric)
+            adapter_report["overall"][metric]
+
+        )
 
         if base is None or adapter is None:
-            continue
-        if adapter > base:
-            winner = "QuantumQwen"
-            
-        if adapter_metric > base_metric:
 
-            winner = "QuantumQwen"
-        elif base > adapter:
-            winner = "Base"
+            continue
+
+        # Lower latency is better
+
+        if metric.lower() == "latency":
+
+            if adapter < base:
+
+                winner = "QuantumQwen"
+
+            elif base < adapter:
+
+                winner = "Base"
+
+            else:
+
+                winner = "Tie"
+
         else:
-            winner = "Tie"
-        
-        comparison["Winner"][metric] = {
+
+            if adapter > base:
+
+                winner = "QuantumQwen"
+
+            elif base > adapter:
+
+                winner = "Base"
+
+            else:
+
+                winner = "Tie"
+
+        improvement = None
+
+        if base != 0:
+
+            improvement = round(
+
+                ((adapter - base) / abs(base)) * 100,
+
+                2,
+
+            )
+
+        comparison["base"][metric] = base
+
+        comparison["adapter"][metric] = adapter
+
+        comparison["winner"][metric] = {
+
             "winner": winner,
 
             "base": base,
 
             "adapter": adapter,
-            "improvement percent": 
-              round(
-                  ((adapter - base) / abs(base)) * 100,
-                  2,
 
-              )
-              if base != 0 else None,
+            "improvement_percent": improvement,
+
         }
 
     save_json(
