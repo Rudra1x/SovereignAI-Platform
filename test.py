@@ -1,14 +1,2 @@
-from evaluation.inference import InferenceEngine
-
-engine = InferenceEngine()
-
-print("=" * 80)
-
-print(
-    engine.generate(
-        "What is a qubit?"
-    )
-)
-
-print("=" * 80)
-# hey just testing the inference engine
+import nltk
+nltk.download('punkt')
