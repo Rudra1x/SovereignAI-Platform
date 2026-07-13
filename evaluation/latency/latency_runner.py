@@ -10,7 +10,7 @@ from __future__ import annotations
 import time
 from datetime import datetime
 from pathlib import Path
-
+from evaluation.latency.prompt_template import build_prompt
 from evaluation.backends.ollama_backend import OllamaBackend
 from evaluation.latency.warmup import ModelWarmup
 from evaluation.utils import load_json, save_json
@@ -161,14 +161,18 @@ class LatencyRunner:
 
             print()
 
+            prompt = build_prompt(
+                sample["question"]
+            )
+
             base = self._run_model(
                 self.base,
-                sample["question"],
+                prompt,
             )
 
             adapter = self._run_model(
                 self.adapter,
-                sample["question"],
+                prompt,
             )
 
             comparison.append(

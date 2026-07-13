@@ -40,12 +40,14 @@ DEFAULT_GENERATION_OPTIONS = {
 
 CREATIVE_GENERATION_OPTIONS = {
 
-    "temperature": 0.8,
+    "temperature": 0.0,
 
-    "top_p": 0.9,
+    "top_p": 1.0,
 
     "top_k": 40,
 
-    "num_predict": 256,
+    "num_predict": 120,
+
+    "repeat_penalty": 1.1,
 
 }
